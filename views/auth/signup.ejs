@@ -1,0 +1,100 @@
+
+<br><br>
+<form action="/user/signup" method="POST">
+    <div class="signup-container">
+        <h3 style="text-align:center;color:rgb(22, 138, 138);padding-bottom: 30px;">Sign Up form</h3>
+        <div class="mb-3 row">
+            <label class="col-sm-3 col-form-label">Username:</label>
+            <div class="col-sm-9">
+              <input type="text" name="username" class="form-control" placeholder="6-16 characters with letters/numbers only" required>
+              <div class="username_err" id="error" style="color:red"></div>
+            </div>
+        </div>
+        <div class="mb-3 row">
+            <label class="col-sm-3 col-form-label">Password:</label>
+            <div class="col-sm-9">
+              <input type="password" name="password" class="form-control" placeholder="8-16 characters" required>
+              <div class="password_err" id="error" style="color:red"></div>
+            </div>
+        </div>
+        <div class="mb-3 row">
+            <label class="col-sm-3 col-form-label">Display name:</label>
+            <div class="col-sm-9">
+              <input type="text" name="displayname" class="form-control" placeholder="e.g. Peter CHAN" required>
+              <div class="displayname_err" id="error" style="color:red"></div>
+            </div>
+        </div>
+        <div class="mb-3 row">
+            <label class="col-sm-3 col-form-label">Department:</label>
+            <div class="col-sm-9">
+              <input type="text" name="department" class="form-control" placeholder="e.g. IT department" required>
+              <div class="department_err" id="error" style="color:red"></div>
+            </div>
+        </div>
+        <div class="mb-3 row">
+            <label class="col-sm-3 col-form-label">Location:</label>
+            <div class="col-sm-9">
+              <input type="text" name="location" class="form-control" placeholder="e.g. IT department, 3/F" required>
+              <div class="location_err" id="error" style="color:red"></div>
+            </div>
+        </div>
+        <div class="mb-3 row">
+            <label class="col-sm-3 col-form-label">Email:</label>
+            <div class="col-sm-9">
+              <input type="text" name="email" class="form-control" placeholder="e.g. abc@gmail.com" required>
+              <div class="email_err" id="error" style="color:red"></div>
+            </div>
+        </div>
+        <div class="mb-3 row">
+            <label class="col-sm-3 col-form-label">Contact No.:</label>
+            <div class="col-sm-9">
+              <input type="text" name="contact_no" class="form-control" placeholder="Only allow 8 digits number" required>
+              <div class="contact_no_err" id="error" style="color:red"></div>
+            </div>
+        </div>
+        <input type="hidden" name="_csrf" value="<%=csrfToken%>">
+        <div class="unexpected_err" id="error" style="color:red"></div>
+        <button type="submit" class="btn btn-dark" style="display:block; margin:30px auto 0px auto;">submit</button>
+    </div>
+</form>
+
+<script>
+    const form = document.querySelector('form');
+    form.addEventListener('submit',async (e)=>{
+        e.preventDefault();
+        const nodeList=document.querySelectorAll('#error');
+        
+        nodeList.forEach((item,index)=>{
+            item.textContent="";
+        });
+        const username=form.username.value;
+        const password=form.password.value;
+        const displayname=form.displayname.value;
+        const email=form.email.value;
+        const contact_no=form.contact_no.value;
+        const location=form.location.value;
+        const department=form.department.value;
+        const csrfToken=form._csrf.value;
+        try{
+            const res_message=await fetch('/user/signup',{
+                method:'POST',
+                body: JSON.stringify({username:username, password:password,displayname:displayname, email:email, contact_no:contact_no, location:location, department:department, _csrf:csrfToken}),
+                headers:{'Content-Type':'application/json'}
+            });
+            const data=await res_message.json();
+            if(data.error){
+                document.querySelector('.unexpected_err').textContent=data.error|| '';   //for unexpected error
+            }else if(data.validate_err){    
+                for(let key in data.validate_err){
+                    document.querySelector(`.${key}`).textContent=data.validate_err[key] || '';
+                }
+            }else{
+                alert('Sign up successfully');
+                window.location.assign('/user/login');
+            }
+        }catch(err){
+            console.log(err);
+            alert(`Something goes wrong, please contact system admin.`);
+            
+        }});
+</script>

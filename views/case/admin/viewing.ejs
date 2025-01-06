@@ -1,0 +1,277 @@
+<div class="sidebar-container">
+    <div class="sidebar">
+        <div class="accordion" id="accordionPanelsStayOpenExample">
+            <div class="accordion-item">
+              <h2 class="accordion-header">
+                <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#panelsStayOpen-collapseOne" aria-expanded="true" aria-controls="panelsStayOpen-collapseOne">
+                  Pending Case
+                </button>
+              </h2>
+              <div id="panelsStayOpen-collapseOne" class="accordion-collapse collapse show">
+                <div class="accordion-body" style="padding:0px">
+                  <div id="pending_case"></div>
+                  <button id='loading_block' class="btn btn-primary" type="button" style='display:none;width:100%;padding:10px' disabled>
+                    <span class="spinner-border spinner-border-sm" aria-hidden="true"></span>
+                    <span role="status">Loading...</span>
+                  </button>
+                </div>
+              </div>
+            </div>
+            <div class="accordion-item">
+              <h2 class="accordion-header">
+                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#panelsStayOpen-collapseTwo" aria-expanded="false" aria-controls="panelsStayOpen-collapseTwo">
+                  Followed by you
+                </button>
+              </h2>
+              <div id="panelsStayOpen-collapseTwo" class="accordion-collapse collapse">
+                <div class="accordion-body" style="padding:0px">
+                    <div id="followed_by_you"></div>
+                </div>
+              </div>
+            </div>
+            <div class="accordion-item">
+              <h2 class="accordion-header">
+                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#panelsStayOpen-collapseThree" aria-expanded="false" aria-controls="panelsStayOpen-collapseThree">
+                  Followed by others
+                </button>
+              </h2>
+              <div id="panelsStayOpen-collapseThree" class="accordion-collapse collapse">
+                <div class="accordion-body" style="padding:0px">
+                    <div id="followed_by_others"></div>
+                </div>
+              </div>
+            </div>
+          </div>
+    </div>
+    <div class="main-content" >
+      <%-include('../../partials/case_tabs')%> 
+    </div>
+</div>
+
+<script>
+    function create_iframe(src,id){
+      const iframe=document.createElement('iframe');
+      iframe.id=id;
+      iframe.className='iframe_';
+      iframe.src=src;
+      return iframe
+    }
+    try{
+      document.getElementById('iframe1').appendChild(create_iframe('/case/create','createFrame'));
+      document.getElementById('iframe3').appendChild(create_iframe('','caseFrame'));
+    }catch(err){
+      console.log(err)
+    }
+    
+    const current_username=document.querySelector('#user_name').textContent;
+
+    //fetch data to get user choice
+    const fetchdata={
+        data:null,
+        async init(){
+            this.clear_old_card();
+            document.getElementById('loading_block').style.display='block';
+            this.data=await this.getdata();
+            await new Promise(resolve=>{setTimeout(resolve,600)});
+            document.getElementById('loading_block').style.display='none';
+            this.bindEvent();
+        },
+        async getdata(){
+            try{
+                const response=await fetch('/api/getcase');
+                return await response.json();
+            }catch(err){
+                console.log(err);
+            }
+
+        },
+        bindEvent(){
+            const pending=document.querySelector('#pending_case');
+            const followed_by_you=document.querySelector('#followed_by_you');
+            const followed_by_others=document.querySelector('#followed_by_others');
+            try{
+                this.data.forEach(
+                    (item,index)=>{
+                        if(item.status==="pending"){
+                          pending.appendChild(this.create_card(item));
+                        }else if(item.status==="in progress"||item.status==="on hold"){
+                          if(item.followed_by.username===current_username){
+                            followed_by_you.appendChild(this.create_card(item));
+                          }else{
+                            followed_by_others.appendChild(this.create_card(item));
+                          }
+                        }
+                    }
+                );
+            }catch(err){
+                console.log(err);
+            }
+            
+        },
+        clear_old_card(){
+          try{
+            const pending=document.querySelector('#pending_case');
+            const followed_by_you=document.querySelector('#followed_by_you');
+            const followed_by_others=document.querySelector('#followed_by_others');
+
+            while(pending?.firstChild){
+                    pending.removeChild(pending.firstChild);
+                  }
+                  while(followed_by_you?.firstChild){
+                    followed_by_you.removeChild(followed_by_you.firstChild);
+                  }
+                  while(followed_by_others?.firstChild){
+                    followed_by_others.removeChild(followed_by_others.firstChild);
+                  }
+          }catch(err){
+            console.log(err);
+          }
+        },
+        create_card(data_obj){
+            const card=document.createElement('div');
+            card.style.cursor='pointer';
+            card.style.padding='10px 0px 0px 20px';
+            card.addEventListener('mouseenter',()=>{
+              card.style.backgroundColor='#f0f0f0';
+            });
+            card.addEventListener('mouseleave',()=>{
+              card.style.backgroundColor='white';
+            });
+            card.onclick=()=>{
+              document.getElementById('caseFrame').src=`/case/update?id=${data_obj._id}`;
+              document.getElementById('nav-contact-tab').click();
+              window.scrollTo({top:0,behavior:'smooth'});
+            };
+            const h2=document.createElement('h6');
+            h2.textContent=data_obj.request_user+" ("+this.time_pass(data_obj.created_at)+")";
+            h2.style.overflow="hidden";
+            const p=document.createElement('p');
+            p.style.overflow="hidden";
+            p.style.display="block";
+            p.style.width='350px';
+            p.style.height='30px';
+            p.style.margin='0px';
+            p.textContent=data_obj.task_detail;
+            card.append(h2,p);
+       
+            return card
+        },
+        time_pass(time1){
+            const d=new Date(time1);
+            let difference_in_time=Date.now()-d.getTime();
+            let difference_in_days=Math.round(difference_in_time/(1000*60*60*24));
+            if(difference_in_days==0){
+                return 'Today'
+            }else if (difference_in_days==1){
+                return 'Yesterday'
+            }else{
+                return ''+difference_in_days+ 'days ago'
+            }
+        }
+    }
+    fetchdata.init();
+
+    setInterval(()=>{
+        fetchdata.init();
+    }, 60*1000*5);
+    window.addEventListener('message',(e)=>{
+      if(e.data==='formSubmitted'){
+        window.location.reload();
+      }
+    });
+    //search function
+    const keywordsearch={
+      data:null,
+      table:null,
+      async init(){   
+        try{
+          this.data=await this.fetch_data();
+          this.tableshow=this.tableshow.bind(this);
+          this.table.clear();
+          this.table.rows.add(this.data);
+          this.table.draw();
+        }catch(err){
+          console.log(err);
+        }
+      },
+      async fetch_data(){
+        try{
+          const keywords=document.getElementById('search_keyword').value;
+          const response=await fetch(`/api/searchcase?keyword=${keywords}`);
+          return await response.json();
+        }catch(err){
+          console.log(err)
+        }
+      },
+      tableshow(){
+        try{
+          this.table=$('#myTable').DataTable({
+            data:this.data,
+            columns:[
+              {data:null,
+                render:function(data,type,row){
+                  return `<button type="button" class="btn btn-link" onclick="keywordsearch.show_detail('${row._id}')">PRS-${row.case_no.toString().padStart(5,'0')}</button>`
+                }
+              },
+              {data:'request_user'},
+              {data:'department'},
+              {data:'contact_no'},
+              {data:'task_detail',
+                render:function(data,type,row){
+                  if(data.length>30){
+                    return `${data.slice(0,30)}......`
+                  }else{
+                    return data
+                  }
+                }
+              },
+              {data:'status'},
+              {data:'created_at',
+                render:function(data,type,row){
+                  return `${data.slice(0,10)}`;
+                }
+              }
+            ],
+            autoWidth:false,
+            language:{
+              search:"Filter records:"
+            }
+          });
+        }catch(err){
+          console.log(err);
+        }
+      },
+      show_detail(_id){
+        document.getElementById('caseFrame').src=`/case/update?id=${_id}`;
+        document.getElementById('nav-contact-tab').click();
+        window.scrollTo({top:0,behavior:'smooth'});
+        return
+      }
+    };
+    
+    keywordsearch.init();
+    keywordsearch.tableshow();
+  window.addEventListener('message',function(event){ 
+    if (event.data==='createformSubmitted'){
+      setTimeout(()=>{                              //after iframe submit the create form, it would fetch the data again, not good practice, need advance if have time
+        fetchdata.init();
+      },700);
+    }else if(event.data==='updateformSubmitted'){
+      
+      setTimeout(()=>{                              //after iframe submit the create form, it would fetch the data again, not good practice, need advance if have time
+        fetchdata.init();
+      },700);
+
+    }
+  });
+</script>
+
+
+
+
+
+
+
+
+
+

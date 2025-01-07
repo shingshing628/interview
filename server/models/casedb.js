@@ -35,7 +35,7 @@ const casedb=new Schema({
     },
     status:{
         type:String,
-        enum:['pending', 'in progress', 'on hold','completed', 'cancelled'],
+        enum:['pending', 'in progress', 'on hold','completed', 'cancelled'],  //in fact, just pending, in progress and completed is used
         default:'pending'  
     },
     urgency:{
@@ -84,7 +84,26 @@ const casedb=new Schema({
     }
  
 });
+casedb.pre('findOneAndUpdate',async function(next){
+    try{
+        const update=this.getUpdate();   //get what you would like to update
+        const query=this.getQuery();      //return the _id and __v that you would like to update
+        const doc=await this.model.findOne(query);
+        if(!doc){
+            throw new Error('document not found');
+        }
+        if (update.$set.status==='completed'){
+            update.$set.duration=Math.floor((Date.now()-doc.created_at) / 1000*60);
+        }
+        next();
+    }catch(err){
+        console.log(err);
+        next(err);
+    }   
+});
 
 casedb.plugin(AutoIncrement,{inc_field:'case_no',start_seq:1});            //auto increment plugin for case_no
+
+
 
 module.exports=mongoose.model('casedb', casedb);  //mongodb collection name, the schema

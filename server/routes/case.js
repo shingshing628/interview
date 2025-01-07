@@ -46,7 +46,7 @@ router.put('/update', verifyToken_middleware, gather_updatedata_middleware, asyn
             //in order to prevent update concurrently, check version (__v) before update
             const updated=await Case.findOneAndUpdate(
                 {_id:req.query.id, __v:req.body.version},
-                req.modified_data,                          //gather from middleware
+                {$set:req.modified_data},                          //gather from middleware
                 {new:true}
         );
             //if !update, mostly is because the version is not correct

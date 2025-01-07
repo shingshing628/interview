@@ -55,7 +55,7 @@ const verifyToken_middleware= async (req,res,next)=>{
         //if refresh token is expired/not valid/empty, it would throw error
         const refreshToken_payload=jwt.verify(refresh_token, process.env.REFRESH_TOKEN_SECRET);
 
-        if(!access_token){                                              // if no access token provided, it would throw error
+        if(!access_token){                                              
             throw new AppError(`The session is expired, please login again`, 401,`No access token provided`);                                               
         }
 
@@ -67,7 +67,7 @@ const verifyToken_middleware= async (req,res,next)=>{
                 sameSite:'strict'
             });                             
         }else{    
-            // check the type on the payload, if pass, then verify
+            // also check the type on the payload
             if (req.user.type!='access'){
                 throw new AppError(`The session is expired, please login again`, 401,`The token type is incorrect`);
             }

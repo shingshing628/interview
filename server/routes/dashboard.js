@@ -44,7 +44,7 @@ router.get('/dashboard_data',verifyToken_middleware, async(req,res)=>{
                         {$sort:{"_id.year":-1,"_id.month":-1}}
                     ],
                     //case in this month
-                    this_month_cases:[
+                    monthly_cases:[
                         {
                             $match:{
                                 created_at:{
@@ -66,7 +66,61 @@ router.get('/dashboard_data',verifyToken_middleware, async(req,res)=>{
                                 statusBreakdown:{$push:{status:'$_id',count:'$count'}}
                             }
                         }
+                    ],
+                    //case completed by each admin this month
+                    completed_by:[
+                        {
+                            $match:{
+                                created_at:{
+                                    $gte:new Date(new Date().getFullYear(),new Date().getMonth(),1),
+                                    $lt:new Date(new Date().getFullYear(),new Date().getMonth()+1,1)
+                                },
+                                status:"completed"
+                            }
+                        },
+                        {
+                            $lookup:{
+                                from:"userdbs",
+                                localField:"followed_by",
+                                foreignField:"_id",
+                                as:"admin"
+                            }
+                        },
+                        {
+                            $group:{
+                                _id:{
+                                    id:'$followed_by',
+                                    name:"$admin.displayname",
+                                },
+                                count:{$sum:1}
+                            }
+                        },
+                        {
+                            $group:{
+                                _id:null,
+                                totalCases:{$sum:'$count'},
+                                Completedcase_distributed:{$push:{followed_by:'$_id',count:'$count'}}
+                            }
+                        }
+                    ],
+                    resolve_within_one_day:[
+                        {
+                            $match:{
+                                duration:{
+                                    $gte:0,
+                                    $lte:1000*60*60*24
+                                },
+                                status:`completed`
+                            }
+                        },
+                        {
+                            $group:{
+                                _id:null,
+                                count:{$sum:1}
+                            }
+                        }
                     ]
+
                 }
             }]);
             return res.json(data);

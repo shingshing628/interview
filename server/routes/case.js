@@ -22,7 +22,7 @@ router.get('/update',verifyToken_middleware,async (req,res,next)=>{
             if (data.status===`completed`){
                 return res.status(200).render('./case/admin/completed',{user:req.user,layout:false,data:data,caseid:caseid})
             }
-            //if status!=completed, that means (pending / in progress), render update page
+            //if status=(pending / in progress), render update page
             return res.status(200).render('./case/admin/update', {csrfToken:req.csrfToken(),user:req.user,layout:false,data:data,caseid:caseid});
         }else if(req.user.role===`user`){
             const caseid=req.query.id;

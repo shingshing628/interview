@@ -18,7 +18,7 @@ const ErrorHandler=(err,req,res,next)=>{
         case 'FAILED_TO_SUBMIT':                  //failed to create a case
             return res.status(err.status||500).send('validation error');       //should advance, because there are no validation on creating case 
         case 'UNAUTHORIZED':                      //for all unauthorized user
-            return res.status(err.status||500).send('unauthorized user');
+            return res.status(err.status||401).send('unauthorized user');
         default:                                  //all unexpected error or not important error would throw here
             return res.status(500).send('internal server error');
     }

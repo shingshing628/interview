@@ -17,6 +17,13 @@
             display: flex;
             flex-direction: column;
         }
+        .scrollbar-hide{
+            -ms-overflow-style:none;
+            scrollbar-width:none;
+        }
+        .scrollbar-hide::-webkit-scrollbar{
+            display:none;
+        }
     </style>
 </head>
 <body class="bg-light">
@@ -34,11 +41,11 @@
                                         <span class="badge bg-primary">Currently</span>
                                     </div>
                                     <div class="text-center py-4">
-                                        <h2 class="display-6 mb-2">$54,321</h2>
+                                        <h2 class="display-6 mb-2" id="openticket">ERROR</h2>
                                         <p class="text-muted mb-0">total</p>
                                     </div>
                                     <div class="text-center py-4">
-                                        <h2 class="display-6 mb-2" style="color:red;">3</h2>
+                                        <h2 class="display-6 mb-2" style="color:red;" id="overdue">ERROR</h2>
                                         <p class="text-muted mb-0">more than 4 hours</p>
                                     </div>
                                 </div>
@@ -55,11 +62,11 @@
                                         <span class="badge bg-success">This month</span>
                                     </div>
                                     <div class="text-center py-4">
-                                        <h2 class="display-6 mb-2">1,234</h2>
+                                        <h2 class="display-6 mb-2" id="performance_cases">ERROR</h2>
                                         <p class="text-muted mb-0">Resolved within 1 day</p>
                                     </div>
                                     <div class="text-center py-4">
-                                        <h2 class="display-6 mb-2">73%</h2>
+                                        <h2 class="display-6 mb-2" id="performance_percentage">ERROR</h2>
                                         <p class="text-muted mb-0">show in percentage</p>
                                     </div>
                                 </div>
@@ -75,12 +82,15 @@
                     <div class="col-12">
                         <div class="border bg-white rounded shadow-sm h-70vh">
                             <div class="block-content">
-                                <div class="card-body">
-                                    <div class="d-flex justify-content-between align-items-center mb-3">
-                                        <h5 class="card-title mb-0">Cases completed</h5>
-                                        <span class="badge bg-warning">This month</span>
-                                    </div>
-                                   
+                                <div class="d-flex justify-content-between align-items-center mb-3 position-sticky top-0">
+                                    <h5 class="card-title mb-0">Cases completed</h5>
+                                    <span class="badge bg-warning">This month</span>
+                                </div>
+                                <div class="card-body overflow-auto scrollbar-hide">
+                                    Tony Chan:
+                                    <div class="progress" role="progressbar" aria-label="Success example" aria-valuenow="25" aria-valuemin="0" aria-valuemax="100">
+                                        <div class="progress-bar bg-success" style="width: 25%">30</div>
+                                      </div>
                                 </div>
                             </div>
                         </div>
@@ -88,9 +98,9 @@
                     <div class="col-12">
                         <div class="border bg-white rounded shadow-sm h-30vh">
                             <div class="block-content">
-                                <h5 class="card-title mb-0"> Today Ticket</h5>
+                                <h5 class="card-title mb-0">Today Ticket</h5>
                                 <br>
-                                <h1>+20</h1>
+                                <h1 id="dailyticket">ERROR</h1>
                             </div>
                         </div>
                     </div>
@@ -101,9 +111,9 @@
             <div class="col-6">
                 <div class="border bg-white rounded shadow-sm h-100">
                     <div class="block-content">
-                        <h5 class="card-title mb-0">Case last 4 months</h5>
+                        <h5 class="card-title mb-0">Cases in last 4 months</h5>
                         <div>
-                            <canvas id="myChart"></canvas>
+                            <canvas id="barChart"></canvas>
                         </div>
                         <div>
                             <canvas id="summary"></canvas>
@@ -115,25 +125,78 @@
         </div>
     </div>
     <script>
-        const ctx = document.getElementById('myChart');
-        new Chart(ctx, {
-            type: 'bar',
-            data: {
-                labels: ['Red', 'Blue', 'Yellow', 'Green'],
-                datasets: [{
-                label: '# of Votes',
-                data: [12, 19, 3, 5, 2, 3],
-                borderWidth: 1
-                }]
+        const dash={
+            data:null,
+            async init(){
+                this.barchart=this.barchart.bind(this);
+                this.show_data=this.show_data.bind(this);
+                this.data=await this.getdata();
+                this.barchart();
+                this.show_data();
             },
-            options: {
-                scales: {
-                    y: {
-                        beginAtZero: true
-                    }
+            async getdata(){
+                try{
+                    const response=await fetch('/dashboard_data');
+                    return await response.json();
+                }catch(err){
+                    console.log(err);
                 }
+            },
+            barchart(){
+                try{
+                    const ctx = document.getElementById('barChart');
+                    new Chart(ctx, {
+                        type: 'bar',
+                        data: {
+                            labels: this.data.bar_chart_label.reverse(),
+                            datasets: [{
+                            label: '# of cases',
+                            data: this.data.bar_chart_data.reverse(),
+                            borderWidth: 1
+                            }]
+                        },
+                        options: {
+                            scales: {
+                                x:{
+                                    title:{
+                                        display:true,
+                                        text:'Month'
+                                    }
+                                },
+                                y: {
+                                    beginAtZero: true,
+                                    ticks:{
+                                        stepSize:100
+                                    },
+                                    title:{
+                                        display:true,
+                                        text:'Cases'
+                                    }
+                                }
+                                
+                            }
+                        }
+                    });
+                }catch(err){
+                    console.log(err)
+                }
+            },
+            show_data(){
+                try{
+                    document.querySelector('#dailyticket').textContent=`+${this.data.today_ticket}`;
+                    document.querySelector('#openticket').textContent=this.data.current_ticket;
+                    document.querySelector('#overdue').textContent=this.data.morethan_4h;
+                    document.querySelector('#performance_cases').textContent=this.data.performance[0].resolve_in1day;
+                    document.querySelector('#performance_percentage').textContent=Number(this.data.performance[1].percentage)*100+'%';
+                }catch(err){
+                    console.log(err);
+                }
+                
             }
-        });
+
+        }
+        dash.init()
+        
     </script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 </body>

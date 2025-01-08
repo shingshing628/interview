@@ -11,14 +11,16 @@ for detail, console.log(req.rawdata)
 class DataTransformer{
     constructor(rawdata){
         this.rawdata=rawdata[0];
-        this.data=
-            {
-                bar_chart_label:[],          
-                bar_chart_data:[],
-                current_ticket:0,
-                morethan_4h:0,
-                performance:[{resolve_in1day:0},{percentage:0}],
-                today_ticket:0
+        this.data={
+            bar_chart_label:[],          
+            bar_chart_data:[],
+            current_ticket:0,
+            morethan_4h:0,
+            performance:[
+                {resolve_in1day:0},
+                {percentage:0}
+            ],
+            today_ticket:0
             }
     }
     getresult(){                                 //error would be handle on middleware
@@ -63,17 +65,11 @@ class DataTransformer{
         }
         
     }
-
-
-    
 }
 
 const rawdata_transform=async (req,res,next)=>{
     try{
         req.data=new DataTransformer(req.rawdata).getresult();
-        console.log(req.data)
-
-        
         return next()
     }catch(err){
         console.log(err);

@@ -23,7 +23,7 @@ router.get('/dashboard_data',verifyToken_middleware, dashboard_data_query, rawda
     try{
         if(req.user.role===`admin`){
             
-            return res.json(req.rawdata);
+            return res.json(req.data);
         }else{
             return res.send('You have no right to do so');
         }

@@ -14,9 +14,8 @@ router.get('/signup',(req,res)=>{
         return res.status(200).render('./auth/signup',{csrfToken:req.csrfToken(),user:req.user});
     }catch(err){
         console.log(err);
-
+        return next(new AppError("INTERNAL_SERVER_ERROR", 500, err));
     }
-    
 });
 
 router.post('/signup',validateSignup_middleware,async (req,res)=>{
@@ -27,7 +26,7 @@ router.post('/signup',validateSignup_middleware,async (req,res)=>{
             password:hashpw, 
             department:req.body.department.trim(),  
             displayname:req.body.displayname.trim(), 
-            email:req.body.email,
+            email:req.body.email.trim(),
             role:'user',
             contact_no:req.body.contact_no.replace(/\s/g,''),
             location:req.body.location.trim() 
@@ -36,18 +35,21 @@ router.post('/signup',validateSignup_middleware,async (req,res)=>{
         return res.status(201).json({error:null});
     } catch(error) {
         console.log(error);
-        return res.status(500).json({error:'Something wrong while signup, please resubmit the form'});
+        return res.status(500).json({error:'Something went wrong, please try to resubmit the form or find system owner'});
     }
-    
 });
 
 router.get('/login',(req,res)=>{
-    return res.status(200).render('./auth/login',{csrfToken:req.csrfToken(), user:req.user});
-}) 
+    try{
+        return res.status(200).render('./auth/login',{csrfToken:req.csrfToken(), user:req.user});
+    }catch(err){
+        console.log(err);
+        return next(new AppError("INTERNAL_SERVER_ERROR", 500, err));
+    }
+});
 
 router.post('/login',async (req,res)=>{
     try{
-        
         const user=await User.findOne({username:req.body.username});
         //check username
         if (!user){
@@ -81,8 +83,7 @@ router.post('/login',async (req,res)=>{
             UserId:user._id
         });
 
-        return res.status(201).json({error:null});     //frontend, if no error would redirect to homepage
-
+        return res.status(200).json({error:null});     //frontend has settle if no error would redirect to homepage
     }catch(error){
         console.log(error);
         //if any error, clear all the cookies
@@ -98,7 +99,6 @@ router.post('/logout', async(req,res,next)=>{
         //for every logout, delete all the refresh token record in database, it could enhance security
         const user=jwt.verify(req.cookies.refreshToken,process.env.REFRESH_TOKEN_SECRET);
         const result=await RefreshTokendb.deleteMany({UserId:user.UserId});
-
         //clear all the cookie
         res.clearCookie('jwt');
         res.clearCookie('refreshToken');

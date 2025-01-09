@@ -135,7 +135,6 @@
             }
         }
         flash_message.init();
-        //end 
         
       
 
@@ -339,6 +338,9 @@
         handle_submit();
 
         function add_log(){
+            if(document.querySelector('#action_toBe_added').value==''){
+                return
+            }
             const table_node=document.querySelector('#table_log');
             const tr=document.createElement('tr');
             tr.classList.add('table-warning');

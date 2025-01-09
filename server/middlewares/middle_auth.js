@@ -25,13 +25,13 @@ const verifyToken_middleware= async (req,res,next)=>{
         try{
             const refreshtoken=await refreshTokendb.findOne({tokenID:tokenID});
             if (!refreshtoken){
-                throw new AppError('The session is expired, please login again',401,'Token could not be found in database');
+                throw new AppError('REFRESH_TOKEN_NOT_FOUND',401,'Token could not be found in database');
             }
             const user=await User.findById(refreshtoken.UserId);
             req.user={username:user.username, displayname:user.displayname, role:user.role, type:'access'};
             return jwt.sign({username:user.username, displayname:user.displayname, role:user.role, type:'access'},process.env.ACCESS_TOKEN_SECRET,{expiresIn:'15m'});
         }catch(err){
-            throw new AppError(`The session is expired, please login again`, 401,`Token verification failed: ${err}`);
+            throw new AppError(`ERROR_RENEW_ACCESSTOKEN`, 401, err);  
         }
     }
 
@@ -45,18 +45,15 @@ const verifyToken_middleware= async (req,res,next)=>{
             if (err.name==='TokenExpiredError'){
                 return true;
             }
-            // if the access token is invalid (but not expire), even the refresh token is true, it required user login again 
-            throw new AppError(`The session is expired, please login again`, 401,`Token verification failed: ${err}`);
+            throw new AppError(`JWT_ERROR`, 401, err);
         }
     }
-
-    
     try{
         //if refresh token is expired/not valid/empty, it would throw error
         const refreshToken_payload=jwt.verify(refresh_token, process.env.REFRESH_TOKEN_SECRET);
 
         if(!access_token){                                              
-            throw new AppError(`The session is expired, please login again`, 401,`No access token provided`);                                               
+            throw new AppError(`NO_ACCESS_TOKEN`, 401, `No access token provided`);                                               
         }
 
         if (isTokenExpired(access_token)===true){                          //it would also check is it valid token and throw error if not 
@@ -69,12 +66,12 @@ const verifyToken_middleware= async (req,res,next)=>{
         }else{    
             // also check the type on the payload
             if (req.user.type!='access'){
-                throw new AppError(`The session is expired, please login again`, 401,`The token type is incorrect`);
+                throw new AppError(`THE_PAYLOAD_ERROR`, 401,`The token type is incorrect`);
             }
         }
         return next();
     }catch (error){
-        console.log(error);
+        //console.log(error);
         return res.status(error.status||401).redirect('/user/login');
     }
 };

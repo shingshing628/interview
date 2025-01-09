@@ -6,6 +6,9 @@ const validateSignup_middleware= async (req,res,next)=>{
     function validateEmail(str){
         return /^[A-Za-z0-9._-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/.test(str);
     }
+    function validpassword(str){
+        return /^[A-Za-z0-9!@#$%^&*()_+-=\[\]{}|:;,.?]*$/.test(str);
+    }
     //only allow A-Z a-z 0-9 with at least one characters for username
     function validusername(str){
         return /^[A-Za-z0-9]+$/.test(str);
@@ -39,6 +42,8 @@ const validateSignup_middleware= async (req,res,next)=>{
             error_include[`password_err`]=`Your password should be more than or equal to 8 characters`;
         }else if(req.body.password.length>16){
             error_include[`password_err`]=`Your password should be less than or equal to 16 characters`;
+        }else if(!validpassword(req.body.password)){
+            error_include[`password_err`]="Your password should only be contain Letters, Numbers and common special chars";
         }
         //validate display name
         if ((req.body.displayname?.trim?.()?.length??0)<1 || (req.body.displayname?.trim?.()?.length??0)>200){
@@ -70,12 +75,12 @@ const validateSignup_middleware= async (req,res,next)=>{
         if(Object.keys(error_include).length===0){                      //if no error
             return next();
         }else{
-             //console.log(error_include);
-            return res.json({validate_err:error_include});
+            //console.log(error_include);
+            return res.status(400).json({validate_err:error_include});
         }
     }catch(err){
         console.log(err);
-        throw new AppError(`Signup_validate_ERR`, 400, err);
+        throw new AppError(`SIGNUP_VALIDATE_ERR_UNEXPECTED`, 500, err);
     }
 }
 

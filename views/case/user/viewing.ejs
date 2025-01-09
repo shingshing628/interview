@@ -45,6 +45,7 @@
       iframe.src=src;
       return iframe
     }
+
     try{
       document.getElementById('iframe1').appendChild(create_iframe('/case/create','createFrame'));
       document.getElementById('iframe3').appendChild(create_iframe('','caseFrame'));
@@ -52,7 +53,7 @@
       console.log(err)
     }
     
-    const current_username=document.querySelector('#user_name').textContent;
+    const current_username=document.querySelector('#user_name')?.textContent;
 
     //fetch data to get user choice
     const fetchdata={
@@ -108,6 +109,7 @@
           }
         },
         create_card(data_obj){
+          try{
             const card=document.createElement('div');
             card.style.cursor='pointer';
             card.style.padding='10px 0px 0px 20px';
@@ -134,6 +136,9 @@
             card.append(h2,p);
        
             return card
+          }catch(err){
+            console.log(err);
+          }
         },
         time_pass(time1){
             const d=new Date(time1);
@@ -150,62 +155,102 @@
     }
     fetchdata.init();
 
-    setInterval(()=>{
-        fetchdata.init();
-    }, 1000*60*5);
-    window.addEventListener('message',(e)=>{
-      if(e.data==='formSubmitted'){
-        window.location.reload();
-      }
-    });
 
-    $(document).ready(async function(){
-            try{
-                const response=await fetch('/api/searchcase/Tony');
-                const result=await response.json();
-                $('#myTable').DataTable({
-                    data:result,
-                    columns:[
-                        {data:'case_no',
-                            render:function(data,type,row){
-                                return `PRS-${data?.toString().padStart(5,'0')}`
-                            }
-                        },
-                        {data:'request_user'},
-                        {data:'department'},
-                        {data:'contact_no'},
-                        {data:'task_detail',
-                            render:function(data,type,row){
-                                if(data.length>30){
-                                    return `${data.slice(0,30)}......`
-                                }else{
-                                    return data
-                                }
-                            }
-                        },
-                        {data:'status'},
-                        {data:'created_at',
-                            render:function(data,type,row){
-                                return `${data.slice(0,10)}`;
-                            }
-                        }
-                    ],
-                    autoWidth:false,
-                    language:{
-                        search:"Filter records:"
-                    }
-                })
-            }catch(err){
-                console.log(err);
+      //search function
+      const keywordsearch={
+      data:null,
+      table:null,
+      async init(){   
+        try{
+          this.data=await this.fetch_data();
+          this.tableshow=this.tableshow.bind(this);
+          this.table.clear();
+          this.table.rows.add(this.data);
+          this.table.draw();
+        }catch(err){
+          console.log(err);
+        }
+      },
+      async fetch_data(){
+        try{
+          const keywords=document.getElementById('search_keyword').value;
+          const response=await fetch(`/api/searchcase?keyword=${keywords}`);
+          return await response.json();
+        }catch(err){
+          console.log(err)
+        }
+      },
+      tableshow(){
+        try{
+          this.table=$('#myTable').DataTable({
+            data:this.data,
+            columns:[
+              {data:null,
+                render:function(data,type,row){
+                  return `<button type="button" class="btn btn-link" onclick="keywordsearch.show_detail('${row._id}')">PRS-${row.case_no.toString().padStart(5,'0')}</button>`
+                }
+              },
+              {data:'request_user'},
+              {data:'department'},
+              {data:'contact_no'},
+              {data:'task_detail',
+                render:function(data,type,row){
+                  if(data.length>30){
+                    return `${data.slice(0,30)}......`
+                  }else{
+                    return data
+                  }
+                }
+              },
+              {data:'status'},
+              {data:'created_at',
+                render:function(data,type,row){
+                  return `${data.slice(0,10)}`;
+                }
+              }
+            ],
+            autoWidth:false,
+            language:{
+              search:"Filter records:"
             }
-        });
-    window.addEventListener('message',function(event){ 
-      if (event.data==='createformSubmitted'){
-        setTimeout(()=>{                              //after iframe submit the create form, it would fetch the data again, not good practice, need advance if have time
-          fetchdata.init();
-        },700);
+          });
+        }catch(err){
+          console.log(err);
+        }
+      },
+      show_detail(_id){
+        document.getElementById('caseFrame').src=`/case/update?id=${_id}`;
+        document.getElementById('nav-contact-tab').click();
+        window.scrollTo({top:0,behavior:'smooth'});
+        return
       }
-    });
+    };
+    
+
+    try{
+      setInterval(()=>{
+        fetchdata.init();
+      }, 1000*60*5);
+
+      window.addEventListener('message',(e)=>{
+        if(e.data==='formSubmitted'){
+          window.location.reload();
+        }
+      });
+
+      window.addEventListener('message',function(event){ 
+        if (event.data==='createformSubmitted'){
+          setTimeout(()=>{                              //after iframe submit the create form, it would fetch the data again, not good practice, need advance if have time
+            fetchdata.init();
+          },700);
+        }
+      });
+    }catch(err){
+      console.log(err);
+    }
+
+    keywordsearch.init();
+    keywordsearch.tableshow();
 </script>
 
 

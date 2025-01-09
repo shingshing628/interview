@@ -1,6 +1,17 @@
 const User=require('../models/userdb');
 const AppError=require('./error_handler').AppError
 
+const handle_complete_action=async (modified_data,jwtuser)=>{
+    const user=await User.findOne({username:jwtuser.username}).lean();
+    if(user){
+        modified_data['followed_by']=user._id;
+    }
+    modified_data[`status`]=`completed`;
+    modified_data[`completed_at`]=new Date();
+    return
+}
+
+
 const gather_updatedata_middleware=async (req,res,next)=>{
     try{
         //add new action log would put here
@@ -30,27 +41,18 @@ const gather_updatedata_middleware=async (req,res,next)=>{
             task_detail:req.body.task_detail,
             urgency:req.body.urgency,
             summary:req.body.summary, 
-            $push:{
-                action_log:{
-                    $each:new_log
-                }
-            },
             $inc:{__v:1}     
         };
-        
-    
+        req.push_log=new_log;
+         
         if (req.body.followed_by){                          //if there are input on followed_by, no matter update or remain unchanged
             modified_data['followed_by']=req.body.followed_by;
             modified_data[`status`]=`in progress`;
         }
-                    
-        if (request_type===`complete`){           //if admin completed the case, need to update-> 1. status to completed  2. followed_by to the one who complete the case
-            complete_user=await User.findOne({username:req.user.username}).lean();
-            if(complete_user){
-                modified_data['followed_by']=complete_user._id;
-            }
-            modified_data[`status`]=`completed`;
+        if (request_type==='complete'){
+            await handle_complete_action(modified_data,req.user);
         }
+        
         req.modified_data=modified_data;
         return next();
     }catch(err){

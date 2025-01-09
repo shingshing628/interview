@@ -1,9 +1,43 @@
 const AppError=require('./error_handler').AppError
 const Case=require('../models/Casedb');
-
+const User=require('../models/userdb');
 const dashboard_data_query=async (req,res,next)=>{
     try{
         if(req.user.role==='admin'){
+            const xdata=await User.aggregate([
+                {
+                    $match:{
+                        role:'admin'
+                    }
+                },
+                {
+                    $lookup:{
+                        from:"casedbs",
+                        let:{admin_id:"$_id"},
+                        pipeline:[
+                            {
+                                $match:{
+                                    $expr:{
+                                        $and:[
+                                            {$eq:["$followed_by","$$admin_id"]},
+                                            {$gte:["$created_at",new Date(new Date().getFullYear(), new Date().getMonth(),1)]},
+                                            {$eq:["$status",'completed']}
+                                        ]
+                                    }
+                                }
+                            }
+                        ],
+                        as:"cases"
+                    }
+                },
+                {
+                    $project:{
+                        displayname:1,
+                        count:{$size:"$cases"}
+                    }
+                }
+            ]);
+   
             const rawdata=await Case.aggregate([
                 {   //to optimize the performance, i assume that all the cases would be completed within 2 years
                     $match:{
@@ -23,6 +57,7 @@ const dashboard_data_query=async (req,res,next)=>{
                                     created_at:{
                                         $gte:new Date(new Date().getFullYear(),new Date().getMonth()-4,1),
                                         $lt:new Date(new Date().getFullYear(),new Date().getMonth(),1)
+                                        
                                     }
                                 }
                             },
@@ -38,83 +73,37 @@ const dashboard_data_query=async (req,res,next)=>{
                             {$sort:{"_id.year":-1,"_id.month":-1}}
                             
                         ],
-                        //case in this month
+                        //completed case in this month
                         monthly_cases:[
                             {
                                 $match:{
-                                    created_at:{
-                                        $gte:new Date(new Date().getFullYear(),new Date().getMonth(),1),
-                                        $lt:new Date(new Date().getFullYear(),new Date().getMonth()+1,1)
-                                    }
+                                    $or:[
+                                        {
+                                            created_at:{
+                                                $gte:new Date(new Date().getFullYear(),new Date().getMonth(),1),
+                                                $lt:new Date(new Date().getFullYear(),new Date().getMonth()+1,1)
+                                            },
+                                            status:'completed'
+                                        },
+                                        {
+                                            created_at:{
+                                                $gte:new Date(new Date().getFullYear(),new Date().getMonth(),1),
+                                                $lt:new Date(Date.now()-(1000*60*60*24))     
+                                            },
+                                            status:{$in:['pending','in progress']}
+                                        }
+                                    ]
                                 }
                             },
-                            {
-                                $group:{
-                                    _id:'$status',
-                                    count:{$sum:1}
-                                }
-                            },
-                            {
-                                $group:{
-                                    _id:null,
-                                    totalCases:{$sum:'$count'},
-                                    statusBreakdown:{$push:{status:'$_id',count:'$count'}}
-                                }
-                            },
-                            {
-                                $project:{
-                                    _id:0,
-                                    totalCases:"$totalCases",
-                                    statusBreakdown:"$statusBreakdown"
-                                }
-                            }
-                        ],
-                        //case completed by each admin this month
-                        completed_by:[
-                            {
-                                $match:{
-                                    created_at:{
-                                        $gte:new Date(new Date().getFullYear(),new Date().getMonth(),1),
-                                        $lt:new Date(new Date().getFullYear(),new Date().getMonth()+1,1)
-                                    },
-                                    status:"completed"
-                                }
-                            },
-                            {
-                                $lookup:{
-                                    from:"userdbs",
-                                    localField:"followed_by",
-                                    foreignField:"_id",
-                                    as:"admin"
-                                }
-                            },
-                            {
-                                $group:{
-                                    _id:{
-                                        id:'$followed_by',
-                                        name:"$admin.displayname",
-                                    },
-                                    count:{$sum:1}
-                                }
-                            },
-                            {
-                                $group:{
-                                    _id:null,
-                                    totalCases:{$sum:'$count'},
-                                    Completedcase_distributed:{$push:{followed_by:'$_id',count:'$count'}}
-                                }
-                            },
-                            {
-                                $project:{
-                                    _id:0,
-                                    totalCases:"$totalCases",
-                                    Completedcase_distributed:"$Completedcase_distributed"
-                                }
-                            }
+                            {$count:'total'}
                         ],
                         resolve_within_one_day:[
                             {
                                 $match:{
+                                    created_at:{
+                                        $gte:new Date(new Date().getFullYear(),new Date().getMonth(),1),
+                                        $lt:new Date(new Date().getFullYear(),new Date().getMonth()+1,1)
+                                    },
                                     duration:{
                                         $gte:0,
                                         $lte:1000*60*60*24
@@ -157,6 +146,7 @@ const dashboard_data_query=async (req,res,next)=>{
                     }
                 }
                 ]);
+                rawdata[0]['workload']=xdata;
                 req.rawdata=rawdata;
                 return next();
         }else{

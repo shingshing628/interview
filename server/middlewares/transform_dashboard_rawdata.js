@@ -1,6 +1,7 @@
 
 const AppError=require('./error_handler').AppError
-
+const {cache,cacheMiddleware}=require('../middlewares/adminlist_cache');
+const User=require('../models/userdb');
 /*
 raw data= [last_four_month_cases, monthly_cases, completed_by, resolve_within_one_day, openTicket, more_than_four_hours, TodayTicket]
 
@@ -20,7 +21,8 @@ class DataTransformer{
                 {resolve_in1day:0},
                 {percentage:0}
             ],
-            today_ticket:0
+            today_ticket:0,
+            workload:this.rawdata.workload
             }
     }
     getresult(){                                 //error would be handle on middleware
@@ -59,11 +61,10 @@ class DataTransformer{
         }
         if(this.rawdata?.resolve_within_one_day?.[0]?.total){
             this.data.performance[0].resolve_in1day=this.rawdata.resolve_within_one_day[0].total;
-            if(this.rawdata?.monthly_cases?.[0]?.totalCases){
-                this.data.performance[1].percentage=(this.data.performance[0].resolve_in1day/this.rawdata.monthly_cases[0].totalCases).toFixed(2)
+            if(this.rawdata?.monthly_cases?.[0]?.total){
+                this.data.performance[1].percentage=(this.data.performance[0].resolve_in1day/this.rawdata.monthly_cases[0].total).toFixed(2)
             }
         }
-        
     }
 }
 

@@ -299,6 +299,9 @@
     
         function add_log(){
             try{
+                if(document.querySelector('#action_toBe_added').value==''){
+                    return
+                }
                 const table_node=document.querySelector('#table_log');
                 const tr=document.createElement('tr');
                 tr.classList.add('table-warning');

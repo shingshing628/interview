@@ -29,7 +29,9 @@ const casedb=new Schema({
         required:true,
         maxlength:[1000,'Request user name cannot exceed 1000 characters'],
     },
-    request_username:{                                   //it store the username that has registered in the system, foreign key for viewing current record for user but not required
+    //it store the username that has registered in the system, foreign key for viewing current record for user but not required
+    // not neccessary for ref because populate is useless
+    request_username:{                                   
         type:String,
         maxlength:[200,'Request user name cannot exceed 200 characters'],
     },
@@ -68,6 +70,10 @@ const casedb=new Schema({
         type:Date,
         default:Date.now
     },
+    completed_at:{
+        type:Date,
+        default:null
+    },  
     followed_by:{
         type:Schema.Types.ObjectId,
         ref:'userdb',

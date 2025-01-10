@@ -44,8 +44,8 @@ const gather_updatedata_middleware=async (req,res,next)=>{
             $inc:{__v:1}     
         };
         req.push_log=new_log;
-         
-        if (req.body.followed_by){                          //if there are input on followed_by, no matter update or remain unchanged
+        //if there are input on followed_by, no matter update or remain unchanged
+        if (req.body.followed_by){                          
             modified_data['followed_by']=req.body.followed_by;
             modified_data[`status`]=`in progress`;
         }
@@ -57,7 +57,7 @@ const gather_updatedata_middleware=async (req,res,next)=>{
         return next();
     }catch(err){
         console.log(err);
-        return next(new AppError(`error on gathering update data`, 401, err));
+        return next(new AppError(`INTERNAL_SERVER_ERROR`, 500, err));
     }  
 }
 module.exports=gather_updatedata_middleware;

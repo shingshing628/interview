@@ -5,14 +5,17 @@ const cacheMiddleware=()=>{                         //get adminlist cache
     return (req,res,next)=>{
         try{
             const key=req.originalUrl;
+            if(key!=='/api/adminlist'){
+                return next(new AppError(`INVALID_KEY_ON_CACHE`, 400, 'The key should be /api/adminlist'))
+            }
             const cachedData=cache.get(key);
             if (cachedData&&cachedData.expiry>Date.now()){
                 return res.json(cachedData.value);
             }
-            next();
+            return next();
         }catch(error){
             console.log(error);
-            throw new AppError(`FAILED_TO_CACHE`, 400, error);
+            return next(new AppError(`FAILED_TO_CACHE`, 500, error));
         }
     }
 };

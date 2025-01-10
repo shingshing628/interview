@@ -43,7 +43,6 @@ router.get('/login',(req,res)=>{
     try{
         return res.status(200).render('./auth/login',{csrfToken:req.csrfToken(), user:req.user});
     }catch(err){
-        console.log(err);
         return next(new AppError("INTERNAL_SERVER_ERROR", 500, err));
     }
 });

@@ -21,12 +21,12 @@ router.get('/getuser_info',verifyToken_middleware,async (req,res,next)=>{
             .select('-password -_id -role');
             return res.status(200).json(user);
         }else{
-            return res.status(403).send('You did not have any right to do that');
+            return next(new AppError('FORBIDDEN',403,'No right to do so'));
         }
         
     }catch(err){
         console.log(err)
-        return next(new AppError('FAILED_TO_GET_USER_INFO', 500, err));
+        return next(new AppError('INTERNAL_SERVER_ERROR', 500, err));
     }
 });
 
@@ -52,7 +52,7 @@ router.get('/getcase',verifyToken_middleware,async (req,res,next)=>{
         }
     }catch(err){
         console.log(err);
-        return next(new AppError('FAILED_TO_GET_CASE',500, err));
+        return next(new AppError('INTERNAL_SERVER_ERROR',500, err));
     }
 });
 
@@ -120,7 +120,7 @@ router.get('/searchcase',verifyToken_middleware, async(req,res)=>{
         }
     }catch(error){
         console.log(error);
-        return next(new AppError("FAILED_TO_SEARCH",500,error));
+        return next(new AppError("INTERNAL_SERVER_ERROR",500,error));
     }
 });
 
@@ -135,14 +135,14 @@ router.get('/adminlist',verifyToken_middleware, cacheMiddleware(), async(req,res
                 value:admin,
                 expiry:Date.now()+(3600*1000)                 //1h
             })
-            return res.json(admin);
+            return res.status(200).json(admin);
         }else{
-            return res.status(401).send(`you did not have admin right to do that`)
+            return next(new AppError('FORBIDDEN',403,'No right to do so'));
         }
         
     }catch(err){
         console.log(err)
-        return res.json({err:'unexpected error'});
+        return next(new AppError('INTERNAL_SERVER_ERROR',500,err));
     }
 });
 

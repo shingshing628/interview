@@ -3,7 +3,7 @@ const AppError=require('./error_handler').AppError
 const {cache,cacheMiddleware}=require('../middlewares/adminlist_cache');
 const User=require('../models/userdb');
 /*
-raw data= [last_four_month_cases, monthly_cases, completed_by, resolve_within_one_day, openTicket, more_than_four_hours, TodayTicket]
+raw data= [last_four_month_cases, monthly_cases, resolve_within_one_day, openTicket, more_than_four_hours, TodayTicket]
 
 For each raw data, please make sure to handle the array as it could be no element inside it
 

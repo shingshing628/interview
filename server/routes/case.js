@@ -15,7 +15,7 @@ router.get('/update',verifyToken_middleware,async (req,res,next)=>{
             .lean();   
 
             if(!data){
-                res.send('The case could not be found on the system');
+                return next(new AppError('CASE_NOT_FOUND',404,'The case could not be found in database'));
             }
 
             //if status=completed, admin could not be able to submit or modify the existing data, render a new page for completed case is an easy way to handle
@@ -30,6 +30,13 @@ router.get('/update',verifyToken_middleware,async (req,res,next)=>{
             .populate('followed_by','-_id -password')
             .select('-_id -summary')
             .lean();
+            if(!data){
+                return next(new AppError('CASE_NOT_FOUND',404,'The case could not be found in database'))
+            }
+            //for user want to view the case did not belong to him
+            if (data.request_username!=req.user.username){
+                return next(new AppError('FORBIDDEN',403,'No right to do so'));
+            }
             // user has no right to update the case, render a page to user that only could view case detail
             return res.status(200).render('./case/user/detail', {user:req.user,layout:false,data:data,caseid:caseid});
         }
@@ -40,8 +47,6 @@ router.get('/update',verifyToken_middleware,async (req,res,next)=>{
 
 router.put('/update', verifyToken_middleware, gather_updatedata_middleware, async (req,res,next)=>{
     try{
-        //modified_data is handled by gather_updatedata_middleware
-
         if(req.user.role===`admin`){
             //in order to prevent update concurrently, check version (__v) before update
             const updated=await Case.findOneAndUpdate(
@@ -58,34 +63,34 @@ router.put('/update', verifyToken_middleware, gather_updatedata_middleware, asyn
         );
             //if !update, mostly is because the version is not correct
             if(!updated){
-                return res.send('Other user has updated the case concurrently, please refresh the page and submit again.')
+                return next('CONCURRENT_UPDATE',409,'CONFLICT');
             //else if admin choose to complete the case and successfully update the content
             }else if(updated && req.query.type===`complete`){
-                return res.send('The case completed.')
+                return res.status(200).send('The case completed.');
             }
             //otherwise, for just update the content, not the completion of the case
-            return res.redirect(`/case/update?id=${req.query.id}&update=success`)
+            return res.status(200).redirect(`/case/update?id=${req.query.id}&update=success`)
         }else{
-            return next(new AppError('UNAUTHORIZED', 401, 'Only admin could update the form'));
+            return next(new AppError('FORBIDDEN',403,'No right to do so'));
         }
     }catch(error){
-        return next(new AppError('FAILED_TO_UPDATE', 400, error));
+        return next(new AppError("INTERNAL_SERVER_ERROR",500,error));
     }
 });
 
 router.get('/create',verifyToken_middleware,async (req,res,next)=>{
     try{
         if (req.user.role===`admin`){
-            return res.render('./case/admin/create', {csrfToken:req.csrfToken(),user:req.user,layout:false});
+            return res.status(200).render('./case/admin/create', {csrfToken:req.csrfToken(),user:req.user,layout:false});
         }else if (req.user.role===`user`){
             const user_info=await User.findOne({
                 username:req.user.username
             })
             .select('-password -_id -role');
-            return res.render('./case/user/create', {csrfToken:req.csrfToken(),user:user_info,layout:false});
+            return res.status(200).render('./case/user/create', {csrfToken:req.csrfToken(),user:user_info,layout:false});
         }
-    }catch(err){ 
-        return next(new AppError('FAILED_TO_GET_RESOURCES', 404, err));
+    }catch(error){ 
+        return next(new AppError("INTERNAL_SERVER_ERROR",500, error));
     }
 });
 
@@ -123,7 +128,7 @@ router.post('/create',verifyToken_middleware,async (req,res,next)=>{
                 summary:req.body.summary
             }
             await Case.create(case_data);
-            return res.status(201).redirect('/case/create');
+            return res.status(201).send('Case created');
         }else if (req.user.role===`user`){
             const case_data={
                 request_user:req.body.request_user,
@@ -133,15 +138,14 @@ router.post('/create',verifyToken_middleware,async (req,res,next)=>{
                 location:req.body.location,
                 department:req.body.department,
                 task_detail:req.body.task_detail,
-                action_log: [{action:'Case created', action_by:req.user.username}],
+                action_log: [{action:'Case created', action_by:req.user.displayname}],
                 contact_no:req.body.contact_no
             }
             await Case.create(case_data);
-            return res.status(201).redirect('/case/create');
+            return res.status(201).send('Case created');
         }   
-    }catch(err){
-        console.log(err);
-        return next(new AppError('FAILED_TO_SUBMIT', 400, err));
+    }catch(error){
+        return next(new AppError("INTERNAL_SERVER_ERROR",500, error));
     }
 });
 
@@ -152,20 +156,8 @@ router.get('/view',verifyToken_middleware,async (req,res,next)=>{
         }else if(req.user.role===`user`){
             return res.status(200).render('./case/user/viewing',{csrfToken:req.csrfToken(),user:req.user});
         }
-    }catch(err){
-        return next(new AppError('FAILED_TO_GET_RESOURCE',404, err));
-    }
-});
-
-router.get('/search',verifyToken_middleware, async(req,res)=>{
-    try{
-        if(req.user.role===`admin`){
-            return res.render('./case/admin/search',{csrfToken:req.csrfToken(),user:req.user,layout:false});
-        }else{
-            
-        }
     }catch(error){
-        console.log(error)
+        return next(new AppError("INTERNAL_SERVER_ERROR",500, error));
     }
 });
 

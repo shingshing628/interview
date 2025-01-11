@@ -1,5 +1,3 @@
-const { crossOriginOpenerPolicy, crossOriginResourcePolicy, originAgentCluster } = require("helmet");
-
 const helmetConfig={
     contentSecurityPolicy:{
         directives:{
@@ -68,6 +66,45 @@ const helmetConfig={
     crossOriginResourcePolicy:{policy:'cross-origin'},
     //this system is same origin, can ignore originAgentCluster
     originAgentCluster:true,
+
+    /*
+    no-referrer: No referrer will be sent
+    strict-origin-when-cross-origin: Full URL for same-origin, origin only for cross-origin
+    referrer is used to indicate the source URL from which a request originated
+    */
+    referrerPolicy:{
+        policy:['no-referrer','strict-origin-when-cross-origin']
+    },
+    /*
+    while user type domain of the website to search,
+    the broswer would checks HSTS status and automatically uses: https if set hsts.
+    otherwise, it may go to http and attacker can intercept this request.
+    */
+    hsts:{
+        maxAge:31536000,    //browser will enforce https for 1 years
+        includeSubDomains:true,  //if subdomain is same, http= > https
+        preload:true      //example.com => https: since domain in browser perload list
+    },
+
+    noSniff:true,
+
+    dnsPrefetchControl:{
+        allow:false
+    },
+
+    ieNoOpen:true,
+
+    frameguard:{
+        action:'sameorigin'
+    },
+
+    permittedCrossDomainPolicies:{
+        permittedPolicies:'none'
+    },
+
+    hidePowerdBy:true,
+
+    xssFilter:true
 
 }
 

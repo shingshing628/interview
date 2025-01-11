@@ -24,9 +24,7 @@ const ErrorHandler=(err,req,res,next)=>{
         case 'SIGNUP_VALIDATE_ERR_UNEXPECTED':               //unexpected fail for signup validation
             return res.status(err.status||500).json({error:'unexpected error for sign up, please contain system admin'});
 
-        //bad practice, no validation on creating the case and assume error is not validate with mongodb
-        case 'FAILED_TO_SUBMIT':                  
-            return res.status(err.status||500).send('validation error');      
+
         //for all unexpected error
         case 'INTERNAL_SERVER_ERROR':                                  
             return res.status(500).send('internal server error');

@@ -1,5 +1,6 @@
-const User=require('../models/userdb');
-const AppError=require('./error_handler').AppError
+const path = require('path');
+const User=require(path.join(__dirname,'..','models','userdb'));
+const AppError=require(path.join(__dirname,'.','error_handler')).AppError;
 
 const handle_complete_action=async (modified_data,jwtuser)=>{
     const user=await User.findOne({username:jwtuser.username}).lean();

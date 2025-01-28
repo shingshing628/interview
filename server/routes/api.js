@@ -1,10 +1,12 @@
+const path = require('path');
 const express=require('express');
 const router=express.Router(); //creates a modular, mountable route handler
-const verifyToken_middleware=require('../middlewares/middle_auth');
-const {cache,cacheMiddleware}=require('../middlewares/adminlist_cache');
-const AppError=require('../middlewares/error_handler').AppError
-const User=require('../models/userdb');
-const Case=require('../models/Casedb');
+const verifyToken_middleware=require(path.join(__dirname,'..','middlewares','middle_auth'));
+const {cache,cacheMiddleware}=require(path.join(__dirname,'..','middlewares','adminlist_cache'));
+const AppError=require(path.join(__dirname,'..','middlewares','error_handler')).AppError;
+const User=require(path.join(__dirname,'..','models','userdb'));
+const Case=require(path.join(__dirname,'..','models','casedb'));
+
 
 router.get('/getuser_info',verifyToken_middleware,async (req,res,next)=>{
     try{

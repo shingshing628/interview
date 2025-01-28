@@ -1,5 +1,6 @@
-const User=require('../models/userdb');
-const AppError=require('./error_handler').AppError
+const path = require('path');
+const User=require(path.join(__dirname,'..','models','userdb'));
+const AppError=require(path.join(__dirname,'.','error_handler')).AppError;
 
 const validateSignup_middleware= async (req,res,next)=>{
     
@@ -70,7 +71,7 @@ const validateSignup_middleware= async (req,res,next)=>{
 
         //validate conatct_no
         if(!valid_conatct_no(req.body.contact_no.replace(/\s/g,''))){
-            error_include['contact_no_err']=`The contact number should be 8 digits number`
+            error_include['contact_no_err']=`The contact number should be 8 digits number`;
         }
         if(Object.keys(error_include).length===0){                      //if no error
             return next();

@@ -1,12 +1,13 @@
+const path = require('path');
 const express=require('express');
 const jwt=require('jsonwebtoken');
 const router=express.Router();
-const User=require('../models/userdb');
-const RefreshTokendb=require('../models/refreshTokendb');
+const User=require(path.join(__dirname,'..','models','userdb'));
+const RefreshTokendb=require(path.join(__dirname,'..','models','refreshTokendb'));
 const bcrypt=require('bcrypt');
 const crypto=require('crypto');
-const AppError=require('../middlewares/error_handler').AppError
-const validateSignup_middleware=require('../middlewares/validate_signup');
+const AppError=require(path.join(__dirname,'..','middlewares','error_handler')).AppError;
+const validateSignup_middleware=require(path.join(__dirname,'..','middlewares','validate_signup'));
 
 //route
 router.get('/signup',(req,res)=>{

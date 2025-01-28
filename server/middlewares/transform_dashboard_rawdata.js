@@ -1,7 +1,5 @@
-
-const AppError=require('./error_handler').AppError
-const {cache,cacheMiddleware}=require('../middlewares/adminlist_cache');
-const User=require('../models/userdb');
+const path = require('path');
+const AppError=require(path.join(__dirname,'.','error_handler')).AppError;
 /*
 raw data= [last_four_month_cases, monthly_cases, resolve_within_one_day, openTicket, more_than_four_hours, TodayTicket]
 

@@ -1,7 +1,8 @@
+const path = require('path');
 const jwt=require('jsonwebtoken');
-const User=require('../models/userdb');
-const refreshTokendb = require('../models/refreshTokendb');
-const AppError=require('./error_handler').AppError
+const User=require(path.join(__dirname,'..','models','userdb'));
+const refreshTokendb=require(path.join(__dirname,'..','models','refreshTokendb'));
+const AppError=require(path.join(__dirname,'.','error_handler')).AppError;
 
 /* 
 verify process:

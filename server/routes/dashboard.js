@@ -1,11 +1,10 @@
+const path = require('path');
 const express=require('express');
 const router=express.Router(); //creates a modular, mountable route handler
-const verifyToken_middleware=require('../middlewares/middle_auth');
-const dashboard_data_query=require('../middlewares/dashboard_pipline');
-const rawdata_transform=require('../middlewares/transform_dashboard_rawdata')
-const AppError=require('../middlewares/error_handler').AppError
-const Case=require('../models/Casedb');
-const User=require('../models/userdb');
+const verifyToken_middleware=require(path.join(__dirname,'..','middlewares','middle_auth'));
+const dashboard_data_query=require(path.join(__dirname,'..','middlewares','dashboard_pipline'));
+const rawdata_transform=require(path.join(__dirname,'..','middlewares','transform_dashboard_rawdata'));
+const AppError=require(path.join(__dirname,'..','middlewares','error_handler')).AppError;
 
 router.get('/dashboard',verifyToken_middleware, async(req,res)=>{
     try{

@@ -1,4 +1,5 @@
-const AppError=require('./error_handler').AppError
+const path = require('path');
+const AppError=require(path.join(__dirname,'.','error_handler')).AppError;
 const cache=new Map();
 
 const cacheMiddleware=()=>{                         //get adminlist cache

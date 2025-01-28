@@ -1,6 +1,7 @@
-const AppError=require('./error_handler').AppError
-const Case=require('../models/Casedb');
-const User=require('../models/userdb');
+const path = require('path');
+const AppError=require(path.join(__dirname,'.','error_handler')).AppError;
+const Case=require(path.join(__dirname,'..','models','casedb'));
+const User=require(path.join(__dirname,'..','models','userdb'));
 const dashboard_data_query=async (req,res,next)=>{
     try{
         if(req.user.role==='admin'){

@@ -5,6 +5,7 @@ const User=require(path.join(__dirname,'..','models','userdb'));
 const dashboard_data_query=async (req,res,next)=>{
     try{
         if(req.user.role==='admin'){
+            //xdata is workload per admin
             const xdata=await User.aggregate([
                 {
                     $match:{
@@ -21,7 +22,7 @@ const dashboard_data_query=async (req,res,next)=>{
                                     $expr:{
                                         $and:[
                                             {$eq:["$followed_by","$$admin_id"]},
-                                            {$gte:["$created_at",new Date(new Date().getFullYear(), new Date().getMonth(),1)]},
+                                            {$gte:["$completed_at",new Date(new Date().getFullYear(), new Date().getMonth(),1)]},
                                             {$eq:["$status",'completed']}
                                         ]
                                     }

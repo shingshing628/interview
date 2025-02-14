@@ -17,6 +17,7 @@
         
     </header>
     <main>
+        
         <div class="alert alert-success" style='display:none' role="alert" id="flash_message"></div>
         <p style="display:none" id="user_name"><%=user?.username%></p>
         <p style="display:none" id="user_displayname"><%=user?.displayname%></p>
@@ -25,6 +26,8 @@
         
         <form action="/case/update?id=<%=caseid%>&_method=PUT" id="update_form" method="POST">
             <input name="version" style="display:none" value="<%=data?.__v%>">
+            <input type="hidden" name="current_handler" value="<%=data.followed_by?._id%>">
+            
             <div style="width:95%;height:100%">
                 <div class="mb-3">
                     <label class="form-label">Requester name:</label>
@@ -97,6 +100,7 @@
                 <div class="mb-3">
                     <label class="form-label">Followed by:</label>
                     <select name="followed_by" id="select_adminlist"></select>
+                    <input type="hidden" id="handler_name" name="handler_name" value="<%=data.followed_by?.displayname%>">
                     <p id="current_responser" style="display:none"><%=data.followed_by?._id%></p>
                 </div>
 
@@ -391,6 +395,20 @@
         }
 
         populateSelect();
+
+        const check_handlername=()=>{
+            try{
+                document.querySelector('#select_adminlist').addEventListener('change',
+                    function(){
+                        const selectedText = this.options[this.selectedIndex].text;
+                        document.querySelector('#handler_name').value=selectedText;
+                    }
+                )  
+            }catch(err){
+                console.log(err);
+            }
+        }
+        check_handlername();
     </script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </body>

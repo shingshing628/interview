@@ -8,6 +8,9 @@ const bcrypt=require('bcrypt');
 const crypto=require('crypto');
 const AppError=require(path.join(__dirname,'..','middlewares','error_handler')).AppError;
 const validateSignup_middleware=require(path.join(__dirname,'..','middlewares','validate_signup'));
+const validateProfile_middleware=require(path.join(__dirname,'..','middlewares','validate_profile'));
+const validatePw_middleware=require(path.join(__dirname,'..','middlewares','validate_resetpw'));
+const verifyToken_middleware=require(path.join(__dirname,'..','middlewares','middle_auth'));
 
 //route
 router.get('/signup',(req,res)=>{
@@ -56,7 +59,7 @@ router.post('/login',async (req,res)=>{
             return res.status(401).json({error:'The username is incorrect'});
         }
         //check password
-        const isValid=await bcrypt.compare(req.body.password,user.password); //must put (plainpassword, encryptedpassword)
+        const isValid=await bcrypt.compare(req.body.password??'',user.password); //must put (plainpassword, hashpassword)
         if(!isValid){
             return res.status(401).json({error:'The password is incorrect'});
         }
@@ -110,6 +113,66 @@ router.post('/logout', async(req,res,next)=>{
         return next(new AppError('LOGOUT_FAILED',500,err));     //pass to error handler
     }
     
-})
+});
  
+router.get('/profile', verifyToken_middleware, async (req,res,next)=>{
+    try{
+        const user=await User.findOne({username:req.user.username}).lean();
+        return res.status(200).render('./auth/profile', {user:user,csrfToken:req.csrfToken()})
+    }catch(err){
+        return next(new AppError("INTERNAL_SERVER_ERROR", 500, err));
+    }
+});
+
+router.put('/profile', verifyToken_middleware, validateProfile_middleware, async (req,res,next)=>{
+    try{
+        let modified_data={
+            email:req.body.email.trim(),
+            department:req.body.department.trim(),
+            displayname:req.body.displayname.trim(),
+            contact_no:req.body.contact_no.replace(/\s/g,''),
+            location:req.body.location.trim()
+        }
+        const update=await User.findOneAndUpdate(
+            {username:req.user.username},
+            {$set:modified_data},
+            {
+                new:true,  //return updated doc
+                lean:true  //return plain object
+            }
+        )
+        if(!update){
+            return next(new AppError("INTERNAL_SERVER_ERROR", 500, err));
+        }
+        return res.status(200).json({error:null})
+    }catch(err){
+        return next(new AppError("INTERNAL_SERVER_ERROR", 500, err));
+    }
+})
+
+
+router.get('/passwordreset', verifyToken_middleware, (req,res,next)=>{
+    try{
+        return res.status(200).render('./auth/passwordreset',{user:req.user,csrfToken:req.csrfToken()})
+    }catch(err){
+        return next(new AppError("INTERNAL_SERVER_ERROR", 500, err));
+    }
+});
+
+router.put('/passwordreset', verifyToken_middleware, validatePw_middleware, async (req,res,next)=>{
+    try{
+        const hashpw=await bcrypt.hash(req.body.new_pw,10); //saltrounds range 10-12
+        const update=await User.findOneAndUpdate(
+            {username:req.user.username},
+            {$set:{password:hashpw}},
+            {new:true,lean:true}
+        );
+        if(!update){
+            return next(new AppError("INTERNAL_SERVER_ERROR", 500, err));
+        }
+        return res.status(200).json({error:null});
+    }catch(err){
+        return next(new AppError("INTERNAL_SERVER_ERROR", 500, err));
+    }
+});
 module.exports=router;

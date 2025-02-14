@@ -33,6 +33,12 @@ const userdb= new Schema({
         required:true,
         maxlength:300
     },
+    /*
+    Since it is simple system that only has two roles and few rights. it could just simply assign admin/user in db
+    However, it is very poor for extension to add right per roles.
+    For advance, create a new table for storing each role contain which rights and join the table. 
+    It is too late for me to discover that and time not adequate, just simply naming admin and user to assign right.
+    */
     role:{
         type:String,
         required:true,

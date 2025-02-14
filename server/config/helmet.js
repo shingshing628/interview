@@ -52,6 +52,7 @@ const helmetConfig={
             frameAncestors:["'self'"],   
             //which URLs can be loaded into frames
             frameSrc:["'self'","http://localhost:*","https://localhost:*",'chrome://*','data:','about:','chrome-error://*','chrome-extension://*'],
+            childSrc: ["'self'","http://localhost:*","https://localhost:*"],
             //prevent atttackers from manipulating relative URLs through <base> tag 
             baseUri:["'self'"],
             // only submit data to authorized domains

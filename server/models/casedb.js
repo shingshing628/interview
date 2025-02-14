@@ -29,8 +29,8 @@ const casedb=new Schema({
         required:true,
         maxlength:[1000,'Request user name cannot exceed 1000 characters'],
     },
-    //it store the username that has registered in the system, foreign key for viewing current record for user but not required
-    // not neccessary for ref because populate is useless
+    /*it store the username that has registered in the system, foreign key for viewing current record for user but not required
+    not neccessary for ref because populate is useless*/
     request_username:{                                   
         type:String,
         maxlength:[200,'Request user name cannot exceed 200 characters'],
@@ -45,6 +45,13 @@ const casedb=new Schema({
         enum:['low','mid','high'],
         default:'low'
     },
+    /* 
+    isolate the relation between user and their information in each case, 
+    it is not populate from userdb because it is not suitable for admin to modify user own data 
+    but modify in case(e.g. sometime contact no. temporary changed for user) is neccessary. 
+    
+    Problem: redundant data.
+    */
     department:{
         type:String,
         maxlength:[1000,'department should not be more than 1000 characters']

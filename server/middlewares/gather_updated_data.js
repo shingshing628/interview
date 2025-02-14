@@ -2,8 +2,9 @@ const path = require('path');
 const User=require(path.join(__dirname,'..','models','userdb'));
 const AppError=require(path.join(__dirname,'.','error_handler')).AppError;
 
-const handle_complete_action=async (modified_data,jwtuser)=>{
-    const user=await User.findOne({username:jwtuser.username}).lean();
+
+// if action = completed, data needed to be update
+const handle_complete_action=async (modified_data,user)=>{
     if(user){
         modified_data['followed_by']=user._id;
     }
@@ -11,10 +12,18 @@ const handle_complete_action=async (modified_data,jwtuser)=>{
     modified_data[`completed_at`]=new Date();
     return
 }
-
+// add to action log if there are changed in responser
+const responser_log=(req,new_log)=>{
+    if(req.body.current_handler===req.body.followed_by){
+        return
+    }
+    new_log.push({action:`The case is assinged to ${req.body.handler_name}`, action_by:req.user.displayname});
+}
 
 const gather_updatedata_middleware=async (req,res,next)=>{
     try{
+
+        const user=await User.findOne({username:req.user.username}).lean();
         //add new action log would put here
         const new_log=[];                          
         const request_type=req.query.type;         
@@ -28,8 +37,12 @@ const gather_updatedata_middleware=async (req,res,next)=>{
         }else if(req.body.action){                
             new_log.push({action:req.body.action, action_by:req.user.displayname});
         }
-        
-        if (request_type===`complete`){           //auto add 'Case completed' on action log if it is completed by admin
+
+        //handle log for responser changed
+        responser_log(req,new_log);
+
+        //auto add 'Case completed' on action log if it is completed by admin
+        if (request_type===`complete`){           
             new_log.push({action:`Case completed`, action_by:req.user.displayname});
         }
                     
@@ -44,6 +57,9 @@ const gather_updatedata_middleware=async (req,res,next)=>{
             summary:req.body.summary, 
             $inc:{__v:1}     
         };
+
+        
+
         req.push_log=new_log;
         //if there are input on followed_by, no matter update or remain unchanged
         if (req.body.followed_by){                          
@@ -51,7 +67,7 @@ const gather_updatedata_middleware=async (req,res,next)=>{
             modified_data[`status`]=`in progress`;
         }
         if (request_type==='complete'){
-            await handle_complete_action(modified_data,req.user);
+            await handle_complete_action(modified_data,user);
         }
         
         req.modified_data=modified_data;

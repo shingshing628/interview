@@ -256,6 +256,9 @@
       setTimeout(()=>{                              //after iframe submit the create form, it would fetch the data again, not good practice, need advance if have time
         fetchdata.init();
       },700);
+      setTimeout(()=>{   
+          document.querySelector('#createFrame').src='/case/create';
+        },5000);
     }else if(event.data==='updateformSubmitted'){
       
       setTimeout(()=>{                              //after iframe submit the create form, it would fetch the data again, not good practice, need advance if have time

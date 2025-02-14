@@ -236,6 +236,7 @@
         if(e.data==='formSubmitted'){
           window.location.reload();
         }
+
       });
 
       window.addEventListener('message',function(event){ 
@@ -243,6 +244,9 @@
           setTimeout(()=>{                              //after iframe submit the create form, it would fetch the data again, not good practice, need advance if have time
             fetchdata.init();
           },700);
+          setTimeout(()=>{   
+          document.querySelector('#createFrame').src='/case/create';
+        },5000);
         }
       });
     }catch(err){

@@ -19,7 +19,7 @@
     <main>
         <p style="display:none" id="user_name"><%=user.username%></p>
         
-        <form action="/case/create" method="POST" id="create_form"onsubmit="notifyParent()">
+        <form action="/case/create" method="POST" id="create_form" onsubmit="notifyParent()">
             <div style="width:95%;height:100%">
                 <div class="mb-3">
                     <label class="form-label">Requester name:</label>
@@ -68,14 +68,14 @@
     }
     function prevent_multi_submit(){
         try{
-                const form=document.getElementById('create_form');
-                const submitButton=document.getElementById('submitButton');
-                form.addEventListener('submit',(e)=>{
-                    submitButton.disabled=true;
-                })
-            }catch(err){
-                console.log(err);
-            }
+            const form=document.getElementById('create_form');
+            const submitButton=document.getElementById('submitButton');
+            form.addEventListener('submit',(e)=>{
+                submitButton.disabled=true;
+            })
+        }catch(err){
+            console.log(err);
+        }
     }
  
     prevent_multi_submit();

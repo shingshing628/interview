@@ -60,7 +60,10 @@ router.put('/update', verifyToken_middleware, gather_updatedata_middleware, asyn
                         }
                     }
                 },                          
-                {new:true}
+                {
+                    new:true,
+                    lean:true
+                }
         );
             //if !update, mostly is because the version is not correct
             if(!updated){
@@ -129,7 +132,7 @@ router.post('/create',verifyToken_middleware,async (req,res,next)=>{
                 summary:req.body.summary
             }
             await Case.create(case_data);
-            return res.status(201).send('Case created');
+            return res.status(201).send('Case created, the page would redirect after 5 second');
         }else if (req.user.role===`user`){
             const case_data={
                 request_user:req.body.request_user,
@@ -143,7 +146,7 @@ router.post('/create',verifyToken_middleware,async (req,res,next)=>{
                 contact_no:req.body.contact_no
             }
             await Case.create(case_data);
-            return res.status(201).send('Case created');
+            return res.status(201).send('Case created, the page would redirect after 5 second');
         }   
     }catch(error){
         return next(new AppError("INTERNAL_SERVER_ERROR",500, error));

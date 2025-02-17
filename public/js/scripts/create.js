@@ -1,4 +1,4 @@
-
+//abandoned
     const searchuser={
         input:null,
         dropdown:null,
@@ -58,7 +58,7 @@
             
             try {
                 // Replace with your API endpoint
-                const response = await fetch(`/case/getuser_info?search=${query}`);
+                const response = await fetch(`/api/getuser_info?search=${query}`);
                 
                 // For demonstration, using dummy data
                 this.results = [

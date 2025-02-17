@@ -39,7 +39,7 @@ app.set('layout','./layouts/main') //set default layout
 //rate limited per minutes
 app.use(rateLimit({
     windowMs: 1000*60,
-    max: 250,
+    max: 200,
     message: 'You have submitted too many requests within 1 minute, please tried to use the system a minute later',
     standardHeaders:true, //return rate limit info in the 'RateLimit-*' headers
     legacyHeaders:false  //Disable old format 'X-RateLimit-*' headers

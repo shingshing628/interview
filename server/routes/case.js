@@ -58,26 +58,32 @@ router.put('/update', verifyToken_middleware, gather_updatedata_middleware, asyn
                         action_log:{
                             $each:req.push_log
                         }
-                    }
+                    },
+                    $inc:{__v:1} 
                 },                          
                 {
                     new:true,
-                    lean:true
+                    lean:true,
+                    runValidators: true,
                 }
         );
-            //if !update, mostly is because the version is not correct
             if(!updated){
-                return next('CONCURRENT_UPDATE',409,'CONFLICT');
+                return next(new AppError("INTERNAL_SERVER_ERROR",500,error));
             //else if admin choose to complete the case and successfully update the content
             }else if(updated && req.query.type===`complete`){
-                return res.status(200).send('The case completed.');
+                return res.status(200).json({error:null, action:'complete'});
             }
             //otherwise, for just update the content, not the completion of the case
-            return res.status(200).redirect(`/case/update?id=${req.query.id}&update=success`)
+            return res.status(200).json({error:null,action:'update'})
         }else{
             return next(new AppError('FORBIDDEN',403,'No right to do so'));
         }
     }catch(error){
+        if(error.name==='ValidationError'){
+            return res.status(200).json({error:error.message, action:'update'});
+        }else if(error.message==='CONCURRENT_UPDATE'){
+            return next(new AppError('CONCURRENT_UPDATE',409,'CONFLICT'))
+        }
         return next(new AppError("INTERNAL_SERVER_ERROR",500,error));
     }
 });
@@ -94,6 +100,7 @@ router.get('/create',verifyToken_middleware,async (req,res,next)=>{
             return res.status(200).render('./case/user/create', {csrfToken:req.csrfToken(),user:user_info,layout:false});
         }
     }catch(error){ 
+        
         return next(new AppError("INTERNAL_SERVER_ERROR",500, error));
     }
 });
@@ -132,7 +139,7 @@ router.post('/create',verifyToken_middleware,async (req,res,next)=>{
                 summary:req.body.summary
             }
             await Case.create(case_data);
-            return res.status(201).send('Case created, the page would redirect after 5 second');
+            return res.status(201).json({error:null});
         }else if (req.user.role===`user`){
             const case_data={
                 request_user:req.body.request_user,
@@ -146,9 +153,12 @@ router.post('/create',verifyToken_middleware,async (req,res,next)=>{
                 contact_no:req.body.contact_no
             }
             await Case.create(case_data);
-            return res.status(201).send('Case created, the page would redirect after 5 second');
+            return res.status(201).json({error:null});
         }   
     }catch(error){
+        if(error.name==='ValidationError'){
+            return res.status(400).json({error:error.message});
+        }
         return next(new AppError("INTERNAL_SERVER_ERROR",500, error));
     }
 });

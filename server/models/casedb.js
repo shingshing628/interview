@@ -1,7 +1,8 @@
 const mongoose=require('mongoose');
+const path = require('path');
 const autoincrementfactory=require('mongoose-sequence');
 const Schema=mongoose.Schema;
-
+const AppError=require(path.join(__dirname,'..','middlewares','error_handler')).AppError;
 const AutoIncrement=autoincrementfactory(mongoose);
 
 const action_logdb=new Schema({
@@ -22,7 +23,7 @@ const action_logdb=new Schema({
 const casedb=new Schema({
     case_no:{
         type:Number,
-        unqiue:true
+        unique:true
     },
     request_user:{                                       //it stores the display name of user, normally for guest 
         type:String,
@@ -47,14 +48,15 @@ const casedb=new Schema({
     },
     /* 
     isolate the relation between user and their information in each case, 
-    it is not populate from userdb because it is not suitable for admin to modify user own data 
-    but modify in case(e.g. sometime contact no. temporary changed for user) is neccessary. 
+    it is not populate from userdb because each case should has their own history and should not be updated after user change has profile in future.
+    but modify in following the case(e.g. sometime contact no. temporary changed for user) is neccessary. 
     
     Problem: redundant data.
     */
     department:{
         type:String,
-        maxlength:[1000,'department should not be more than 1000 characters']
+        maxlength:[1000,'department should not be more than 1000 characters'],
+        required:true
     },
     contact_no:{
         type:String,
@@ -101,17 +103,21 @@ casedb.pre('findOneAndUpdate',async function(next){
     try{
         const update=this.getUpdate();   //get what you would like to update
         const query=this.getQuery();      //return the _id and __v that you would like to update
-        const doc=await this.model.findOne(query);
+        const doc=await this.model.findOne({_id:query._id});
+        
         if(!doc){
             throw new Error('document not found');
+        }else{
+            if(doc.__v!=query.__v){
+                return next(new AppError('CONCURRENT_UPDATE',409,'CONFLICT'))   //concurrent update
+            }
         }
         if (update.$set.status==='completed'){
             update.$set.duration=Math.floor((Date.now()-doc.created_at) / 1000*60);
         }
-        next();
+        return next();
     }catch(err){
-        console.log(err);
-        next(err);
+        return next(err);
     }   
 });
 

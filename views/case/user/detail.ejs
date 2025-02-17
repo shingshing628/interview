@@ -61,7 +61,7 @@
                         <%data?.action_log.forEach((item,index)=>{%>
                         <tr>
                             <td><%=item.action%></td>
-                            <td><%=item.action_at.toISOString().slice(0,10)%></td>
+                            <td><%=new Date(item.action_at.getTime()+8*1000*60*60).toISOString().slice(0,10)%></td>
                             <td><%=item.action_by%></td>
                         </tr>
                         <%});%>
@@ -70,8 +70,9 @@
             </div>
 
             <label>Urgency:</label>
-                <select name="urgency" class="form-select" aria-label="Default select example" disabled>
-                    <option value="low" selected>Low</option>
+                <div id="cur_urgency" style="display:none"><%=data?.urgency%></div>
+                <select name="urgency" id='urgency' class="form-select" aria-label="Default select example" disabled>
+                    <option value="low">Low</option>
                     <option value="mid">Mid</option>
                     <option value="high">High</option>
                 </select>
@@ -80,7 +81,7 @@
     </main>
     <script>
         document.querySelector('#case_no').textContent=('PRS-'+document.querySelector('#case_no').textContent.toString().padStart(5,'0'));
-        
+        document.querySelector('#urgency').value=document.querySelector('#cur_urgency').textContent;
 
        
     </script>

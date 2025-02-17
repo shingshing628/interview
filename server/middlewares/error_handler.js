@@ -18,7 +18,7 @@ const ErrorHandler=(err,req,res,next)=>{
         case 'CASE_NOT_FOUND':                     //for all cases that could not found in database
             return res.status(err.status||404).send('Case not found');
         case 'CONCURRENT_UPDATE':                  //all conflict for concurrent case updated
-            return res.status(err.status||409).send('Other user has updated the case concurrently, please refresh the page and submit again.')
+            return res.status(err.status||409).json({error:'Other user has updated the case concurrently, please refresh the page and submit again.'})
         case 'INVALID_KEY_ON_CACHE':
             return res.status(err.status||400).send('Invalid key on cache');
         case 'SIGNUP_VALIDATE_ERR_UNEXPECTED':               //unexpected fail for signup validation

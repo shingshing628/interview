@@ -85,27 +85,7 @@ const helmetConfig={
         maxAge:31536000,    //browser will enforce https for 1 years
         includeSubDomains:true,  //if subdomain is same, http= > https
         preload:true      //example.com => https: since domain in browser perload list
-    },
-
-    noSniff:true,
-
-    dnsPrefetchControl:{
-        allow:false
-    },
-
-    ieNoOpen:true,
-
-    frameguard:{
-        action:'sameorigin'
-    },
-
-    permittedCrossDomainPolicies:{
-        permittedPolicies:'none'
-    },
-
-    hidePowerdBy:true,
-
-    xssFilter:true
+    }
 
 }
 

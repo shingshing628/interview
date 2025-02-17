@@ -19,7 +19,7 @@
     <main>
         <p style="display:none" id="user_name"><%=user.username%></p>
         
-        <form action="/case/create" method="POST" id="create_form" onsubmit="notifyParent()">
+        <form method="POST" id="create_form">
             <div style="width:95%;height:100%">
                 <div class="mb-3">
                     <label class="form-label">Requester name:</label>
@@ -63,23 +63,44 @@
     
 <script>
 
-    function notifyParent(){
-        window.parent.postMessage('createformSubmitted','*');
-    }
-    function prevent_multi_submit(){
-        try{
-            const form=document.getElementById('create_form');
-            const submitButton=document.getElementById('submitButton');
-            form.addEventListener('submit',(e)=>{
-                submitButton.disabled=true;
-            })
-        }catch(err){
-            console.log(err);
-        }
-    }
- 
-    prevent_multi_submit();
 
+    function handle_submit(){
+            try{
+                const updateform=document.getElementById('create_form');
+                //const submitButton=document.getElementById('submitButton');
+                updateform.addEventListener('submit',async(e)=>{
+                    //submitButton.disabled=true;
+                    e.preventDefault();
+                
+                    const request_user=updateform.request_user.value;
+                    const department=updateform.department.value;
+                    const contact_no=updateform.contact_no.value;
+                    const location=updateform.location.value;
+                    const task_detail=updateform.task_detail.value;
+                    const urgency=updateform.urgency.value;
+                    const csrfToken=updateform._csrf.value;
+
+                    const res_message=await fetch(`/case/create`,{
+                        method:'POST',
+                        body: JSON.stringify({request_user:request_user,department:department,contact_no:contact_no,location:location,task_detail:task_detail,urgency:urgency, _csrf:csrfToken}),
+                        headers:{'Content-Type':'application/json'}
+                    });
+                    const data=await res_message.json();
+                   
+                    if(data.error){
+                        alert('The case could not be created, reason:'+data.error);
+                        
+                    }else{
+                        alert('create successfully');
+                        window.parent.postMessage('createformSubmitted','*');
+                        window.location.reload();
+                    }
+                })
+            }catch(err){
+                console.log(err);
+            }
+        }
+        handle_submit();
     </script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </body>

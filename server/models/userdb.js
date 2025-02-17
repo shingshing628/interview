@@ -14,8 +14,7 @@ const userdb= new Schema({
     password:{
         type:String,
         required:true,
-        minlength:[8,'password must at least 8 charcters'],
-        maxlenght:[16,'password not more than 16 characters']
+        minlength:[8,'password must at least 8 charcters']
     },
     email:{
         type:String,

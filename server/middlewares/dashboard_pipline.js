@@ -75,7 +75,7 @@ const dashboard_data_query=async (req,res,next)=>{
                             {$sort:{"_id.year":-1,"_id.month":-1}}
                             
                         ],
-                        //completed case in this month
+                        //used to calculate performance
                         monthly_cases:[
                             {
                                 $match:{

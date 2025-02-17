@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -7,25 +8,40 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
     <style>
-        .h-40vh { height: 325px; }
-        .h-60vh { height: 325px; }
-        .h-70vh { height: 500px; }
-        .h-30vh { height: 150px; }
+        .h-40vh {
+            height: 325px;
+        }
+
+        .h-60vh {
+            height: 325px;
+        }
+
+        .h-70vh {
+            height: 500px;
+        }
+
+        .h-30vh {
+            height: 150px;
+        }
+
         .block-content {
             padding: 20px;
             height: 100%;
             display: flex;
             flex-direction: column;
         }
-        .scrollbar-hide{
-            -ms-overflow-style:none;
-            scrollbar-width:none;
+
+        .scrollbar-hide {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
         }
-        .scrollbar-hide::-webkit-scrollbar{
-            display:none;
+
+        .scrollbar-hide::-webkit-scrollbar {
+            display: none;
         }
     </style>
 </head>
+
 <body class="bg-light">
     <div class="container-fluid p-4">
         <div class="row g-4">
@@ -49,7 +65,7 @@
                                         <p class="text-muted mb-0">more than 4 hours</p>
                                     </div>
                                 </div>
-                                
+
                             </div>
                         </div>
                     </div>
@@ -82,7 +98,8 @@
                     <div class="col-12">
                         <div class="border bg-white rounded shadow-sm h-70vh">
                             <div class="block-content">
-                                <div class="d-flex justify-content-between align-items-center mb-3 position-sticky top-0">
+                                <div
+                                    class="d-flex justify-content-between align-items-center mb-3 position-sticky top-0">
                                     <h5 class="card-title mb-0">Cases completed</h5>
                                     <span class="badge bg-warning">This month</span>
                                 </div>
@@ -116,108 +133,109 @@
                             <canvas id="summary"></canvas>
                         </div>
                     </div>
-                    
+
                 </div>
             </div>
         </div>
     </div>
     <script>
-        const dash={
-            data:null,
-            async init(){
-                this.barchart=this.barchart.bind(this);
-                this.show_data=this.show_data.bind(this);
-                this,workload_per_admin=this.workload_per_admin.bind(this);
-                this.data=await this.getdata();
+        const dash = {
+            data: null,
+            async init() {
+                this.barchart = this.barchart.bind(this);
+                this.show_data = this.show_data.bind(this);
+                this, workload_per_admin = this.workload_per_admin.bind(this);
+                this.data = await this.getdata();
                 this.barchart();
                 this.show_data();
                 this.workload_per_admin();
             },
-            async getdata(){
-                try{
-                    const response=await fetch('/dashboard_data');
+            async getdata() {
+                try {
+                    const response = await fetch('/dashboard_data');
                     return await response.json();
-                }catch(err){
+                } catch (err) {
                     console.log(err);
                 }
             },
-            barchart(){
-                try{
+            barchart() {
+                try {
                     const ctx = document.getElementById('barChart');
                     new Chart(ctx, {
                         type: 'bar',
                         data: {
                             labels: this.data.bar_chart_label.reverse(),
                             datasets: [{
-                            label: '# of cases',
-                            data: this.data.bar_chart_data.reverse(),
-                            borderWidth: 1
+                                label: '# of cases',
+                                data: this.data.bar_chart_data.reverse(),
+                                borderWidth: 1
                             }]
                         },
                         options: {
                             scales: {
-                                x:{
-                                    title:{
-                                        display:true,
-                                        text:'Month'
+                                x: {
+                                    title: {
+                                        display: true,
+                                        text: 'Month'
                                     }
                                 },
                                 y: {
                                     beginAtZero: true,
-                                    ticks:{
-                                        stepSize:100
+                                    ticks: {
+                                        stepSize: 100
                                     },
-                                    title:{
-                                        display:true,
-                                        text:'Cases'
+                                    title: {
+                                        display: true,
+                                        text: 'Cases'
                                     }
                                 }
-                                
+
                             }
                         }
                     });
-                }catch(err){
+                } catch (err) {
                     console.log(err)
                 }
             },
-            show_data(){
-                try{
-                    document.querySelector('#dailyticket').textContent=`+${this.data.today_ticket}`;
-                    document.querySelector('#openticket').textContent=this.data.current_ticket;
-                    document.querySelector('#overdue').textContent=this.data.morethan_4h;
-                    document.querySelector('#performance_cases').textContent=this.data.performance[0].resolve_in1day;
-                    document.querySelector('#performance_percentage').textContent=Number(this.data.performance[1].percentage)*100+'%';
-                }catch(err){
+            show_data() {
+                try {
+                    document.querySelector('#dailyticket').textContent = `+${this.data.today_ticket}`;
+                    document.querySelector('#openticket').textContent = this.data.current_ticket;
+                    document.querySelector('#overdue').textContent = this.data.morethan_4h;
+                    document.querySelector('#performance_cases').textContent = this.data.performance[0].resolve_in1day;
+                    document.querySelector('#performance_percentage').textContent = Number(this.data.performance[1].percentage) * 100 + '%';
+                } catch (err) {
                     console.log(err);
                 }
-                
+
             },
-            workload_per_admin(){
-                try{
-                    const wpr=document.querySelector('#workload_per_admin');
-                    let largest=0;
-                    this.data.workload.forEach((item,index) => {
-                        if(item.count>largest){
-                            largest=item.count;
+            workload_per_admin() {
+                try {
+                    const wpr = document.querySelector('#workload_per_admin');
+                    let largest = 0;
+                    this.data.workload.forEach((item, index) => {
+                        if (item.count > largest) {
+                            largest = item.count;
                         }
                     })
-                    this.data.workload.forEach((item,index) => {
+                    this.data.workload.forEach((item, index) => {
                         wpr.insertAdjacentHTML('beforeend',
                             `${item.displayname}:
                                 <div class="progress" role="progressbar" aria-label="Success example" aria-valuenow="25" aria-valuemin="0" aria-valuemax="100">
-                                    <div class="progress-bar bg-success" style="width:${item.count/largest*100}%">${item.count}</div>
+                                    <div class="progress-bar bg-success" style="width:${item.count / largest * 100}%">${item.count}</div>
                                 </div><br>`
                         );
                     });
-                }catch(err){
+                } catch (err) {
                     console.log(err);
                 }
             }
 
         }
         dash.init()
-        
+
     </script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 </body>
+
 </html>

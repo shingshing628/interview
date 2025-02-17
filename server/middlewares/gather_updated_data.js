@@ -17,7 +17,7 @@ const responser_log=(req,new_log)=>{
     if(req.body.current_handler===req.body.followed_by){
         return
     }
-    new_log.push({action:`The case is assinged to ${req.body.handler_name}`, action_by:req.user.displayname});
+    new_log.push({action:`The case is assigned to ${req.body.handler_name}`, action_by:req.user.displayname});
 }
 
 const gather_updatedata_middleware=async (req,res,next)=>{
@@ -27,7 +27,7 @@ const gather_updatedata_middleware=async (req,res,next)=>{
         //add new action log would put here
         const new_log=[];                          
         const request_type=req.query.type;         
-    
+      
         /* action could be more than one, it may be submitted in array / string,
             need to identitfy the format */
         if (Array.isArray(req.body.action)){       
@@ -54,8 +54,8 @@ const gather_updatedata_middleware=async (req,res,next)=>{
             location:req.body.location,
             task_detail:req.body.task_detail,
             urgency:req.body.urgency,
-            summary:req.body.summary, 
-            $inc:{__v:1}     
+            summary:req.body.summary
+    
         };
 
         

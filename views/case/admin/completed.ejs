@@ -83,8 +83,9 @@
                 <br>
 
                 <label>Urgency:</label>
-                    <select name="urgency" class="form-select" aria-label="Default select example" disabled>
-                        <option value="low" selected>Low</option>
+                    <div id="cur_urgency" style="display:none"><%=data?.urgency%></div>
+                    <select name="urgency" id="urgency" class="form-select" aria-label="Default select example" disabled>
+                        <option value="low">Low</option>
                         <option value="mid">Mid</option>
                         <option value="high">High</option>
                     </select>
@@ -107,6 +108,7 @@
     <script>
         try{
             document.querySelector('#case_no').textContent=('PRS-'+document.querySelector('#case_no').textContent.toString().padStart(5,'0'));
+            document.querySelector('#urgency').value=document.querySelector('#cur_urgency').textContent;
         }catch(err){
             console.log(err)
         }

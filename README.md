@@ -1,17 +1,17 @@
 A problem reporting system with task management and dashboard analytics
 
 ## Features
--JWT authentication with access and refresh tokens
--Role-based Access Control (admin/user)   
--CRUD operation for case management
--RESTful API Architecture
--Rate limiting using fixed window algorithm
--CSRF protection
--input validation
--Analytics dashboard
--error handling
--caching (for getting adminlist while case creation/update)
--simple search
+- JWT authentication with access and refresh tokens
+- Role-based Access Control (admin/user)   
+- CRUD operation for case management
+- RESTful API Architecture
+- Rate limiting using fixed window algorithm
+- CSRF protection
+- input validation
+- Analytics dashboard
+- error handling
+- caching (for getting adminlist while case creation/update)
+- simple search
 
 !!important. role could only be modified in database, please change role=admin if you would like to test admin function, otherwise, by default role=user
 

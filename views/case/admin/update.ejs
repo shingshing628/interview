@@ -1,0 +1,497 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="layouts, main">
+    <meta name="author" content="Tony Chan">
+    <title>
+        <%=locals.title%>
+    </title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css" rel="stylesheet">
+    <link rel="stylesheet" href="/css/style.css">
+    <script type="text/javascript" defer src="/js/script.js"></script>
+</head>
+
+<body>
+    <header>
+
+    </header>
+    <main>
+
+        <div class="alert alert-success" style='display:none' role="alert" id="flash_message"></div>
+        <p style="display:none" id="user_name"><%=user?.username%></p>
+        <p style="display:none" id="user_displayname"><%=user?.displayname%></p>
+        <h2 id="case_no" style="color:rgb(2, 13, 19);"><%=data?.case_no%></h2>
+        <p id="case_id" style="display:none"><%=caseid%></p>
+
+        <form id="update_form" method="POST">
+            <input name="version" style="display:none" value="<%=data?.__v%>">
+            <input type="hidden" name="current_handler" value="<%=data.followed_by?._id%>">
+
+            <div style="width:95%;height:100%">
+                <div class="mb-3">
+                    <label class="form-label">Requester name:</label>
+                    <div class="search-container">
+                        <input type="text" name="request_user" class="form-control bg-light" id="request_user"
+                            autocomplete="off" value="<%=data?.request_user%>" readonly required>
+                        <div class="dropdown-custom"></div>
+                    </div>
+                    <label class="form-label">User ID: (For system user only)</label>
+                    <input type="text" name="request_username" class="form-control bg-light" id="request_username"
+                        autocomplete="off" value="<%=data?.request_username%>" readonly>
+                </div>
+                <div class="mb-3 row">
+                    <div class="col-sm-6">
+                        <label>Department</label>
+                        <input type="text" class="form-control" name="department" id='department' autocomplete="off"
+                            value='<%=data?.department%>' required>
+                    </div>
+                    <div class="col-sm-6">
+                        <label>Phone number:</label>
+                        <input type="text" class="form-control" name="contact_no" id='contact_no' autocomplete="off"
+                            value='<%=data?.contact_no%>' required>
+                    </div>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label">Location</label>
+                    <input type="text" class="form-control" name="location" id='location' autocomplete="off"
+                        value='<%=data?.location%>' required>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label">Detail</label>
+                    <textarea name="task_detail" id='task_detail' autocomplete="off" class="form-control" rows="3"
+                        required><%=data?.task_detail%></textarea>
+                </div>
+                <div class="table-responsive" style="height:200px">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th scope="col">Action</th>
+                                <th scope="col">Date</th>
+                                <th scope="col">Handle By</th>
+                            </tr>
+                        </thead>
+                        <tbody class="table-group-divider" id="table_log">
+                            <%data?.action_log.forEach((item,index)=>{%>
+                                <tr>
+                                    <td><%=item.action%></td>
+                                    <td><%=new Date(item.action_at.getTime()+8*1000*60*60).toISOString().slice(0,10)%></td>
+                                    <td><%=item.action_by%></td>
+                                </tr>
+                                <%});%>
+                        </tbody>
+                    </table>
+                </div>
+                <div style="display:flex;flex-wrap:nowrap;">
+                    <label style="width:120px;margin:auto 0 auto 0">Action log:</label>
+                    <input type="text" class="form-control" id="action_toBe_added" autocomplete="off"
+                        placeholder="if any">
+                    <button type="button" class="btn btn-dark" style="margin-left:20px" onclick="add_log()">Add</button>
+                </div>
+                <br>
+
+                <label>Urgency:</label>
+                <div id="cur_urgency" style="display:none"><%=data.urgency%></div>
+                <select name="urgency" id='urgency' class="form-select" aria-label="Default select example">
+                    <option value="low">Low</option>
+                    <option value="mid">Mid</option>
+                    <option value="high">High</option>
+                </select>
+                <br>
+                <div class="mb-3">
+                    <label class="form-label">Summary</label>
+                    <textarea name="summary" autocomplete="off" class="form-control"
+                        rows="2"><%=data.summary%></textarea>
+                </div>
+                <br>
+                <div class="mb-3">
+                    <label class="form-label">Followed by:</label>
+                    <select name="followed_by" id="select_adminlist"></select>
+                    <input type="hidden" id="handler_name" name="handler_name"
+                        value="<%=data.followed_by?.displayname%>">
+                    <p id="current_responser" style="display:none"><%=data.followed_by?._id%></p>
+                </div>
+
+                <input type="hidden" name="_csrf" value="<%=csrfToken%>">
+                <br>
+                <button type="button" id='update_button' class="btn btn-info">Update</button>
+                <button type="button" id='complete_button' class="btn btn-danger" style="float:right">Completed</button>
+                <br>
+            </div>
+        </form>
+
+    </main>
+    <script>
+        //flash message
+        document.querySelector('#urgency').value = document.querySelector('#cur_urgency').textContent;
+        const params = new URLSearchParams(window.location.search);
+        const flash_message = {
+            update_status: null,
+            init() {
+                this.update_status = params.get('update');
+                document.querySelector('#flash_message').textContent = '';
+                document.querySelector('#flash_message').style.display = 'none';
+                this.show_flash = this.show_flash.bind(this);
+                this.show_flash();
+            },
+            show_flash() {
+                try {
+                    if (this.update_status === 'success') {
+                        document.querySelector('#flash_message').textContent = 'Updated successfully';
+                        document.querySelector('#flash_message').style.display = 'block';
+                    }
+                } catch (err) {
+                    console.log('flash error: ' + err);
+                    document.querySelector('#flash_message').textContent = 'Unexpected error for update';
+                    document.querySelector('#flash_message').style.display = 'block';
+                }
+            }
+        }
+        flash_message.init();
+
+
+
+
+        //quick search for username
+        document.querySelector('#case_no').textContent = ('PRS-'+document.querySelector('#case_no').textContent.toString().padStart(5,'0'));
+        const searchuser = {
+            input: null,
+            dropdown: null,
+            debounceTimer: null,
+            selectedIndex: -1,
+            result: [],
+
+            init() {
+                this.input = document.querySelector('#request_user');
+                this.dropdown = document.querySelector('.dropdown-custom');
+                this.bindEvents();
+            },
+            bindEvents() {
+                this.input.addEventListener('input', (e) => {
+                    clearTimeout(this.debounceTimer);
+                    const query = e.target.value.trim();
+                    if (query.length < 2) {
+                        this.hideDropdown();
+                        return
+                    }
+                    this.debounceTimer = setTimeout(() => {
+                        this.search(query);
+                    }, 1000)
+                });
+                // Keyboard navigation
+                this.input.addEventListener('keydown', (e) => {
+                    switch (e.key) {
+                        case 'ArrowDown':
+                            e.preventDefault();
+                            this.moveSelection(1);
+                            break;
+                        case 'ArrowUp':
+                            e.preventDefault();
+                            this.moveSelection(-1);
+                            break;
+                        case 'Enter':
+                            e.preventDefault();
+                            this.selectResult();
+                            break;
+                        case 'Escape':
+                            this.hideDropdown();
+                            break;
+                    }
+                });
+
+                // Click outside to close
+                document.addEventListener('click', (e) => {
+                    if (!this.input.contains(e.target) && !this.dropdown.contains(e.target)) {
+                        this.hideDropdown();
+                    }
+                });
+            },
+
+            async search(query) {
+                this.showLoading();
+
+                try {
+                    // Replace with your API endpoint
+                    const response = await fetch(`/api/getuser_info?search=${query}`);
+                    // For demonstration, using dummy data
+                    this.results = await response.json();
+
+                    this.displayResults(query);
+                } catch (error) {
+                    console.error('Search error:', error);
+                    this.showError();
+                }
+            },
+
+            displayResults(query) {
+                if (this.results.length === 0) {
+                    this.dropdown.innerHTML = '<div class="no-results">No results found</div>';
+                    this.showDropdown();
+                    return;
+                }
+
+                const html = this.results.map((result, index) => {
+                    const highlightedName = this.highlightMatch(result.username + ' (' + result.displayname + ')', query);
+                    return `
+                        <div class="dropdown-item" data-index="${index}">
+                            ${highlightedName}
+                        </div>
+                    `;
+                }).join('');
+
+                this.dropdown.innerHTML = html;
+                this.showDropdown();
+
+                // Add click events to items
+                this.dropdown.querySelectorAll('.dropdown-item').forEach(item => {
+                    item.addEventListener('click', () => {
+                        const index = parseInt(item.dataset.index);
+                        this.selectedIndex = index;
+                        this.selectResult();
+                    });
+
+                    item.addEventListener('mouseenter', () => {
+                        this.selectedIndex = parseInt(item.dataset.index);
+                        this.highlightSelected();
+                    });
+                });
+            },
+
+            highlightMatch(text, query) {
+                const regex = new RegExp(`(${query})`, 'gi');
+                return text.replace(regex, '<span class="highlight">$1</span>');
+            },
+
+            moveSelection(direction) {
+                if (!this.dropdown.classList.contains('show')) return;
+
+                this.selectedIndex += direction;
+
+                if (this.selectedIndex >= this.results.length) {
+                    this.selectedIndex = 0;
+                } else if (this.selectedIndex < 0) {
+                    this.selectedIndex = this.results.length - 1;
+                }
+
+                this.highlightSelected();
+                this.scrollToSelected();
+            },
+
+            highlightSelected() {
+                this.dropdown.querySelectorAll('.dropdown-item').forEach((item, index) => {
+                    item.classList.toggle('selected', index === this.selectedIndex);
+                });
+            },
+
+            scrollToSelected() {
+                const selected = this.dropdown.querySelector('.selected');
+                if (selected) {
+                    selected.scrollIntoView({
+                        block: 'nearest',
+                        behavior: 'smooth'
+                    });
+                }
+            },
+
+            selectResult() {
+                if (this.selectedIndex >= 0 && this.selectedIndex < this.results.length) {
+                    const selected = this.results[this.selectedIndex];
+                    this.input.value = selected.displayname;
+                    document.querySelector('#request_username').value = selected.username;
+                    document.querySelector('#department').value = selected.department;
+                    document.querySelector('#contact_no').value = selected.contact_no;
+                    document.querySelector('#location').value = selected.location;
+                    this.hideDropdown();
+                    // Trigger any additional actions here
+                }
+            },
+
+            showLoading() {
+                this.dropdown.innerHTML = '<div class="loading">Searching...</div>';
+                this.showDropdown();
+            },
+
+            showError() {
+                this.dropdown.innerHTML = '<div class="no-results">Error fetching results</div>';
+                this.showDropdown();
+            },
+
+            showDropdown() {
+                this.dropdown.classList.add('show');
+            },
+
+            hideDropdown() {
+                this.dropdown.classList.remove('show');
+                this.selectedIndex = -1;
+            }
+        };
+
+        searchuser.init();
+        //end 
+
+        const handle_submit = () => {
+            try {
+                const updateform = document.querySelector('#update_form');
+                const button_complete = document.querySelector('#complete_button');
+                const button_update = document.querySelector('#update_button');
+
+
+                button_complete.addEventListener('click', async (e) => {
+                    e.preventDefault();
+                    const version = updateform.version.value;
+                    const current_handler = updateform.current_handler.value;
+                    const request_user = updateform.request_user.value;
+                    const request_username = updateform.request_username.value;
+                    const department = updateform.department.value;
+                    const contact_no = updateform.contact_no.value;
+                    const location = updateform.location.value;
+                    const task_detail = updateform.task_detail.value;
+                    const urgency = updateform.urgency.value;
+                    const summary = updateform.summary.value;
+                    const followed_by = updateform.followed_by.value;
+                    const action = updateform.action.value;
+                    const handler_name = updateform.handler_name.value;
+                    const csrfToken = updateform._csrf.value;
+
+                    const res_message = await fetch(`/case/update?id=${document.querySelector(`#case_id`).textContent}&type=complete&_method=PUT`, {
+                        method: 'POST',
+                        body: JSON.stringify({ version: version, current_handler: current_handler, request_user: request_user, request_username: request_username, department: department, contact_no: contact_no, location: location, task_detail: task_detail, urgency: urgency, summary: summary, followed_by: followed_by, action: action, handler_name: handler_name, _csrf: csrfToken }),
+                        headers: { 'Content-Type': 'application/json' }
+                    });
+                    const data = await res_message.json();
+
+                    if (data.error) {
+                        alert('The case could not be completed, reason:' + data.error);
+                        window.location.reload();
+
+                    } else {
+                        alert('Completed successfully');
+                        window.parent.postMessage('updateformSubmitted', '*');
+                        window.location.reload();
+                    }
+                });
+
+                button_update.addEventListener(`click`, async (e) => {
+                    e.preventDefault();
+                    const version = updateform.version.value;
+                    const current_handler = updateform.current_handler.value;
+                    const request_user = updateform.request_user.value;
+                    const request_username = updateform.request_username.value;
+                    const department = updateform.department.value;
+                    const contact_no = updateform.contact_no.value;
+                    const location = updateform.location.value;
+                    const task_detail = updateform.task_detail.value;
+                    const urgency = updateform.urgency.value;
+                    const summary = updateform.summary.value;
+                    const followed_by = updateform.followed_by.value;
+                    const action = updateform.action.value;
+                    const handler_name = updateform.handler_name.value;
+                    const csrfToken = updateform._csrf.value;
+
+                    const res_message = await fetch(`/case/update?id=${document.querySelector(`#case_id`).textContent}&type=update&_method=PUT`, {
+                        method: 'POST',
+                        body: JSON.stringify({ version: version, current_handler: current_handler, request_user: request_user, request_username: request_username, department: department, contact_no: contact_no, location: location, task_detail: task_detail, urgency: urgency, summary: summary, followed_by: followed_by, action: action, handler_name: handler_name, _csrf: csrfToken }),
+                        headers: { 'Content-Type': 'application/json' }
+                    });
+                    const data = await res_message.json();
+
+                    if (data.error) {
+                        alert('The data could not be updated, reason: ' + data.error);
+                        window.location.reload();
+                    } else {
+                        alert('Update successfully');
+                        window.parent.postMessage('updateformSubmitted', '*');
+                        window.location.reload();
+                    }
+                });
+            } catch (err) {
+                alert(`Something goes wrong, please contact system admin.`);
+                console.log(error)
+            }
+        }
+        handle_submit();
+
+
+
+
+        function add_log() {
+            if (document.querySelector('#action_toBe_added').value == '') {
+                return
+            }
+            const table_node = document.querySelector('#table_log');
+            const tr = document.createElement('tr');
+            tr.classList.add('table-warning');
+            const td1 = document.createElement('td');
+            const td2 = document.createElement('td');
+            const td3 = document.createElement('td');
+            td1.textContent = document.querySelector('#action_toBe_added').value;
+            let hidden_input = document.createElement('input');
+            hidden_input.type = 'hidden';
+            hidden_input.name = 'action';
+            hidden_input.value = td1.textContent;
+            td1.appendChild(hidden_input);
+            tr.appendChild(td1);
+            td2.textContent = 'now';
+            tr.appendChild(td2);
+            td3.textContent = document.querySelector('#user_displayname').textContent;
+            tr.appendChild(td3);
+            table_node.appendChild(tr);
+            document.querySelector('#action_toBe_added').value = "";
+        }
+
+
+        const populateSelect = async () => {
+            const select = document.querySelector('#select_adminlist');
+            const responser_id = document.querySelector('#current_responser').textContent;
+            select.disabled = true;         //Disable during loading
+            try {
+                const response = await fetch('/api/adminlist');
+                if (!response.ok) {
+                    throw new Error('Network response was not ok');
+                }
+                const data = await response.json();
+
+                select.innerHTML = `<option value="">-Select-</option>`;
+                data.forEach((item, index) => {
+                    const option = new Option(item.displayname, item._id);
+                    if (item._id === responser_id && responser_id) {
+                        option.selected = true;
+                    }
+                    select.add(option);
+                });
+            } catch (error) {
+                console.log(error);
+                select.innerHTML = '<option value="">Error loading data</option>'
+            } finally {
+                select.disabled = false;
+            }
+        }
+
+        populateSelect();
+
+        const check_handlername = () => {
+            try {
+                document.querySelector('#select_adminlist').addEventListener('change',
+                    function () {
+                        const selectedText = this.options[this.selectedIndex].text;
+                        document.querySelector('#handler_name').value = selectedText;
+                    }
+                )
+            } catch (err) {
+                console.log(err);
+            }
+        }
+        check_handlername();
+
+
+
+    </script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+
+</html>

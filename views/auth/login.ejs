@@ -1,0 +1,11 @@
+<form action="/user/login" method="POST">
+    <label>username:</label>
+    <input type="text" name="username"><br>
+    <label>password:</label>
+    <input type="password" name="password"><br>
+    <div class="validate_error" style="color:red"></div>
+    <input type="hidden" name="_csrf" value="<%=csrfToken%>">
+    <button type="submit">submit</button>
+</form>
+<p>If you have not registered an account, please click <span><a href="/user/signup">here</a></span> to sign up</p>
+<script type='text/javascript' src="/js/scripts/login.js"></script>

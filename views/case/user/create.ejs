@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"> 
+    <meta name="description" content="layouts, main">
+    <meta name="author" content="Tony Chan">
+    <title><%=locals.title%></title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css" rel="stylesheet">
+    <link rel="stylesheet" href="/css/style.css">
+    <script type="text/javascript" defer  src="/js/script.js"></script>
+</head>
+
+<body>
+    <header>
+        
+    </header>
+    <main>
+        <p style="display:none" id="user_name"><%=user.username%></p>
+        
+        <form method="POST" id="create_form">
+            <div style="width:95%;height:100%">
+                <div class="mb-3">
+                    <label class="form-label">Requester name:</label>
+                    <div class="search-container">
+                        <input type="text" name="request_user" class="form-control" id="request_user" autocomplete="off" value="<%=user.displayname%>" readonly required>
+                        <div class="dropdown-custom"></div>
+                    </div>
+                </div>
+                <div class="mb-3 row">
+                    <div class="col-sm-6">
+                        <label>Department</label>
+                        <input type="text" class="form-control" name="department" id='department' autocomplete="off" value="<%=user.department%>" readonly required>
+                    </div>
+                    <div class="col-sm-6">
+                        <label>Phone number:</label>
+                        <input type="text" class="form-control" name="contact_no" id='contact_no' autocomplete="off" value="<%=user.contact_no%>" readonly required>
+                    </div>
+                </div>          
+                
+                <div class="mb-3">
+                    <label class="form-label">Location</label>
+                    <input type="text" class="form-control" name="location" id='location' autocomplete="off" value="<%=user.location%>" readonly required>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Detail</label>
+                    <textarea name="task_detail" autocomplete="off" class="form-control" rows="3" required></textarea>
+                </div>
+                <label>Urgency:</label>
+                    <select name="urgency" class="form-select" aria-label="Default select example">
+                        <option value="low" selected>Low</option>
+                        <option value="mid">Mid</option>
+                        <option value="high">High</option>
+                    </select>
+                <br>
+                <input type="hidden" name="_csrf" value="<%=csrfToken%>">
+                <button type="submit" class="btn btn-info" id="submitButton">submit</button>
+            </div>
+        </form>
+    </main>
+
+    
+<script>
+
+
+    function handle_submit(){
+            try{
+                const updateform=document.getElementById('create_form');
+                //const submitButton=document.getElementById('submitButton');
+                updateform.addEventListener('submit',async(e)=>{
+                    //submitButton.disabled=true;
+                    e.preventDefault();
+                
+                    const request_user=updateform.request_user.value;
+                    const department=updateform.department.value;
+                    const contact_no=updateform.contact_no.value;
+                    const location=updateform.location.value;
+                    const task_detail=updateform.task_detail.value;
+                    const urgency=updateform.urgency.value;
+                    const csrfToken=updateform._csrf.value;
+
+                    const res_message=await fetch(`/case/create`,{
+                        method:'POST',
+                        body: JSON.stringify({request_user:request_user,department:department,contact_no:contact_no,location:location,task_detail:task_detail,urgency:urgency, _csrf:csrfToken}),
+                        headers:{'Content-Type':'application/json'}
+                    });
+                    const data=await res_message.json();
+                   
+                    if(data.error){
+                        alert('The case could not be created, reason:'+data.error);
+                        
+                    }else{
+                        alert('create successfully');
+                        window.parent.postMessage('createformSubmitted','*');
+                        window.location.reload();
+                    }
+                })
+            }catch(err){
+                console.log(err);
+            }
+        }
+        handle_submit();
+    </script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+
+</html>
+
+

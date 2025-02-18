@@ -13,7 +13,7 @@ const validatePw_middleware=require(path.join(__dirname,'..','middlewares','vali
 const verifyToken_middleware=require(path.join(__dirname,'..','middlewares','middle_auth'));
 
 //route
-router.get('/signup',(req,res)=>{
+router.get('/signup',(req,res,next)=>{
     try{
         return res.status(200).render('./auth/signup',{csrfToken:req.csrfToken(),user:req.user});
     }catch(err){
@@ -22,7 +22,7 @@ router.get('/signup',(req,res)=>{
     }
 });
 
-router.post('/signup',validateSignup_middleware,async (req,res)=>{
+router.post('/signup',validateSignup_middleware,async (req,res,next)=>{
     try{
         const hashpw=await bcrypt.hash(req.body.password,10); //saltrounds range 10-12
         const the_user={
@@ -43,7 +43,7 @@ router.post('/signup',validateSignup_middleware,async (req,res)=>{
     }
 });
 
-router.get('/login',(req,res)=>{
+router.get('/login',(req,res,next)=>{
     try{
         return res.status(200).render('./auth/login',{csrfToken:req.csrfToken(), user:req.user});
     }catch(err){
@@ -51,7 +51,7 @@ router.get('/login',(req,res)=>{
     }
 });
 
-router.post('/login',async (req,res)=>{
+router.post('/login',async (req,res,next)=>{
     try{
         const user=await User.findOne({username:req.body.username});
         //check username

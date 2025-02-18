@@ -6,7 +6,15 @@ const dashboard_data_query=require(path.join(__dirname,'..','middlewares','dashb
 const rawdata_transform=require(path.join(__dirname,'..','middlewares','transform_dashboard_rawdata'));
 const AppError=require(path.join(__dirname,'..','middlewares','error_handler')).AppError;
 
-router.get('/dashboard',verifyToken_middleware, async(req,res)=>{
+router.get('/',verifyToken_middleware,(req,res,next)=>{
+    try{
+        return res.status(200).redirect('/case/view');
+    }catch(err){
+        return next(new AppError('INTERNAL_SERVER_ERROR',500,error));
+    }
+})
+
+router.get('/dashboard',verifyToken_middleware, async(req,res,next)=>{
     try{
         if(req.user.role===`admin`){
             return res.status(200).render('./dashboard',{user:req.user,layout:false});
@@ -19,7 +27,7 @@ router.get('/dashboard',verifyToken_middleware, async(req,res)=>{
     }
 });
 
-router.get('/dashboard_data',verifyToken_middleware, dashboard_data_query, rawdata_transform, async(req,res)=>{
+router.get('/dashboard_data',verifyToken_middleware, dashboard_data_query, rawdata_transform, async(req,res,next)=>{
     try{
         if(req.user.role===`admin`){
             return res.status(200).json(req.data);

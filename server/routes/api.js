@@ -58,7 +58,7 @@ router.get('/getcase',verifyToken_middleware,async (req,res,next)=>{
     }
 });
 
-router.get('/searchcase',verifyToken_middleware, async(req,res)=>{
+router.get('/searchcase',verifyToken_middleware, async(req,res,next)=>{
     try{
         const keyword=req.query.keyword?.trim()||'';
 
@@ -126,7 +126,7 @@ router.get('/searchcase',verifyToken_middleware, async(req,res)=>{
     }
 });
 
-router.get('/adminlist',verifyToken_middleware, cacheMiddleware(), async(req,res)=>{
+router.get('/adminlist',verifyToken_middleware, cacheMiddleware(), async(req,res,next)=>{
     try{
         if (req.user.role===`admin`){
             const admin=await User.find({

@@ -1,3 +1,4 @@
+
 .search-container {
     position: relative;
 }
@@ -60,9 +61,12 @@
 .sidebar-container{
     display:flex;
     min-height:100vh;
+    
+    
 }
 .sidebar{
-    width:400px;
+    min-width:400px;
+    max-width: 400px;
     padding:20px;
     border-right: 1px solid #dee2e6;
 }
@@ -70,7 +74,6 @@
     flex:1;
     padding:20px;
 }
-
 
 
 /*update.ejs*/

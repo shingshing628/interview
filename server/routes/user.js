@@ -11,7 +11,7 @@ const validateSignup_middleware=require(path.join(__dirname,'..','middlewares','
 const validateProfile_middleware=require(path.join(__dirname,'..','middlewares','validate_profile'));
 const validatePw_middleware=require(path.join(__dirname,'..','middlewares','validate_resetpw'));
 const verifyToken_middleware=require(path.join(__dirname,'..','middlewares','middle_auth'));
-
+const {cache,cacheMiddleware}=require(path.join(__dirname,'..','middlewares','adminlist_cache'));
 //route
 router.get('/signup',(req,res,next)=>{
     try{
@@ -53,6 +53,7 @@ router.get('/login',(req,res,next)=>{
 
 router.post('/login',async (req,res,next)=>{
     try{
+        
         const user=await User.findOne({username:req.body.username});
         //check username
         if (!user){
@@ -62,6 +63,9 @@ router.post('/login',async (req,res,next)=>{
         const isValid=await bcrypt.compare(req.body.password??'',user.password); //must put (plainpassword, hashpassword)
         if(!isValid){
             return res.status(401).json({error:'The password is incorrect'});
+        }
+        if(user?.role==='admin'){
+            cache.set('/api/adminlist',null);  
         }
         //assign new access token and refresh token
         const accessToken=jwt.sign({username:user.username, displayname:user.displayname, role:user.role,type:'access'},process.env.ACCESS_TOKEN_SECRET,{expiresIn:'15m'});
@@ -170,6 +174,9 @@ router.put('/passwordreset', verifyToken_middleware, validatePw_middleware, asyn
         if(!update){
             return next(new AppError("INTERNAL_SERVER_ERROR", 500, err));
         }
+        res.clearCookie('jwt');
+        res.clearCookie('refreshToken');
+        await RefreshTokendb.deleteMany({UserId:req.user.UserId});
         return res.status(200).json({error:null});
     }catch(err){
         return next(new AppError("INTERNAL_SERVER_ERROR", 500, err));

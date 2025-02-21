@@ -82,8 +82,8 @@ router.get('/searchcase',verifyToken_middleware, async(req,res,next)=>{
                     {status:keyword}
                 ]
             })
-            .limit(300)
             .sort({created_at:-1})
+            .limit(300)
             .select('_id case_no request_user department contact_no task_detail status created_at')
             .lean();
             return res.status(200).json(result);
